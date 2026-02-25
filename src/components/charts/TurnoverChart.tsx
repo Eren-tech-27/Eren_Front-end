@@ -28,21 +28,23 @@ export const options = {
     maintainAspectRatio: false,
     plugins: {
         legend: {
-            position: 'top' as const,
+            // switch to bottom on narrow screens for better space usage
+            position: (ctx: any) => (ctx?.chart?.width && ctx.chart.width < 480 ? 'bottom' : 'top'),
             align: 'end' as const,
             labels: {
-                usePointStyle: true,
-                padding: 15,
+                boxWidth: 12,
+                padding: 8,
             }
         },
         title: {
             display: true,
-            text: 'TURN OVER RATE & ABSENTISM',
+            text: 'Turnover Rate (2024)',
             position: 'top' as const,
             align: 'start' as const,
             color: '#333',
             font: {
-                size: 16,
+                // smaller font on narrow screens
+                size: (ctx: any) => (ctx?.chart?.width && ctx.chart.width < 400 ? 12 : 16),
                 weight: 'bold' as const,
             },
         },
@@ -50,7 +52,7 @@ export const options = {
     scales: {
         y: {
             beginAtZero: true,
-            max: 20,
+            max: 100,
             grid: {
                 color: '#f0f0f0',
             }
@@ -63,7 +65,7 @@ export const options = {
     },
     elements: {
         line: {
-            tension: 0.4,
+            tension: 0.4, // smooth curves
         }
     }
 };
@@ -74,26 +76,20 @@ export const data = {
     labels,
     datasets: [
         {
-            fill: false,
-            label: 'Turn Over Rate',
-            data: [4, 6, 5, 8, 7, 9, 8, 10, 6, 8, 5, 7],
-            borderColor: '#1E88E5',
-            pointBackgroundColor: '#1E88E5',
-            pointBorderColor: '#1E88E5',
-            tension: 0.4,
-        },
-        {
-            fill: false,
-            label: 'Absentism',
-            data: [5, 7, 6, 7, 8, 9, 7, 11, 7, 9, 6, 8],
-            borderColor: '#00897B',
-            pointBackgroundColor: '#00897B',
-            pointBorderColor: '#00897B',
-            tension: 0.4,
+            fill: true,
+            label: 'Turnover %',
+            data: [12, 19, 15, 25, 22, 30, 28, 35, 20, 25, 18, 22],
+            borderColor: '#FF9800',
+            backgroundColor: 'rgba(255, 152, 0, 0.1)',
         },
     ],
 };
 
 export function TurnoverChart() {
-    return <div className="h-full w-full"><Line options={options} data={data} /></div>;
+    // responsive height: smaller on mobile, larger on desktop
+    return (
+        <div className="w-full h-48 sm:h-56 md:h-64 lg:h-72">
+            <Line options={options} data={data} />
+        </div>
+    );
 }

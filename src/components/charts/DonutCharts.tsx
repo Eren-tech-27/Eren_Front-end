@@ -17,7 +17,7 @@ interface DonutChartProps {
     cutout?: string;
 }
 
-const DonutChart = ({ title, dataValues, labels, colors, cutout = '70%' }: DonutChartProps) => {
+const DonutChart = ({ title, dataValues, labels, colors, cutout = '72%' }: DonutChartProps) => {
     const data = {
         labels: labels,
         datasets: [
@@ -25,6 +25,8 @@ const DonutChart = ({ title, dataValues, labels, colors, cutout = '70%' }: Donut
                 data: dataValues,
                 backgroundColor: colors,
                 borderWidth: 0,
+                hoverBorderWidth: 2,
+                hoverBorderColor: '#fff',
             },
         ],
     };
@@ -38,158 +40,38 @@ const DonutChart = ({ title, dataValues, labels, colors, cutout = '70%' }: Donut
             },
             tooltip: {
                 enabled: true,
+                backgroundColor: 'rgba(15, 23, 42, 0.9)',
+                titleColor: '#fff',
+                bodyColor: '#e2e8f0',
+                borderColor: 'rgba(255,255,255,0.1)',
+                borderWidth: 1,
+                cornerRadius: 10,
+                padding: 10,
             },
         },
         cutout: cutout,
     };
 
     return (
-        <div className="flex flex-col items-center">
-            <div className="relative h-32 w-32">
+        <div className="flex flex-col items-center p-5 rounded-2xl bg-white border border-slate-100 shadow-sm hover:shadow-md transition-all duration-300 group card-hover">
+            <div className="relative h-28 w-28 mb-3">
                 <Doughnut data={data} options={options} />
                 <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                    <span className="text-xl font-bold text-gray-700">{dataValues[0]}%</span>
+                    <span className="text-xl font-bold text-slate-700">{dataValues[0]}%</span>
                 </div>
             </div>
-            <p className="mt-2 text-sm font-medium text-gray-600">{title}</p>
-        </div>
-    );
-};
-
-// Individual Donut Components
-export const AttendanceDonut = () => (
-    <DonutChart
-        title="Attendance"
-        dataValues={[85, 15]}
-        labels={['Present', 'Absent']}
-        colors={['#1E88E5', '#FFC107']}
-    />
-);
-
-export const RatioDonut = () => {
-    const data = {
-        labels: ['Administrator', 'Replacement Officer', 'Technical'],
-        datasets: [
-            {
-                data: [40, 35, 25],
-                backgroundColor: ['#2196F3', '#00897b', '#1565c0'],
-                borderWidth: 0,
-            },
-        ],
-    };
-
-    const options = {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-            legend: {
-                display: true,
-                position: 'bottom' as const,
-                labels: {
-                    font: {
-                        size: 12,
-                    },
-                    usePointStyle: true,
-                    padding: 15,
-                },
-            },
-            tooltip: {
-                enabled: true,
-            },
-        },
-        cutout: '70%',
-    };
-
-    return (
-        <div className="flex flex-col items-center w-full">
-            <div className="relative h-40 w-40">
-                <Doughnut data={data} options={options} />
-            </div>
-        </div>
-    );
-};
-
-export const NonOrganicDonut = () => {
-    const data = {
-        labels: ['Job Order', 'Consultant'],
-        datasets: [
-            {
-                data: [55, 45],
-                backgroundColor: ['#7B1FA2', '#00BCD4'],
-                borderWidth: 0,
-            },
-        ],
-    };
-
-    const options = {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-            legend: {
-                display: true,
-                position: 'bottom' as const,
-                labels: {
-                    font: {
-                        size: 12,
-                    },
-                    usePointStyle: true,
-                    padding: 15,
-                },
-            },
-            tooltip: {
-                enabled: true,
-            },
-        },
-        cutout: '70%',
-    };
-
-    return (
-        <div className="flex flex-col items-center w-full">
-            <div className="relative h-40 w-40">
-                <Doughnut data={data} options={options} />
-            </div>
-        </div>
-    );
-};
-
-export const OrganicDonut = () => {
-    const data = {
-        labels: ['Temporary', 'Partial Appointee', 'Permanent'],
-        datasets: [
-            {
-                data: [35, 25, 40],
-                backgroundColor: ['#00897B', '#FF6F00', '#1565C0'],
-                borderWidth: 0,
-            },
-        ],
-    };
-
-    const options = {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-            legend: {
-                display: true,
-                position: 'bottom' as const,
-                labels: {
-                    font: {
-                        size: 12,
-                    },
-                    usePointStyle: true,
-                    padding: 15,
-                },
-            },
-            tooltip: {
-                enabled: true,
-            },
-        },
-        cutout: '70%',
-    };
-
-    return (
-        <div className="flex flex-col items-center w-full">
-            <div className="relative h-40 w-40">
-                <Doughnut data={data} options={options} />
+            <p className="text-sm font-semibold text-slate-700 mb-2">{title}</p>
+            {/* Legend */}
+            <div className="flex flex-wrap justify-center gap-x-3 gap-y-1">
+                {labels.map((label, index) => (
+                    <div key={label} className="flex items-center gap-1.5">
+                        <div
+                            className="w-2.5 h-2.5 rounded-full"
+                            style={{ backgroundColor: colors[index] }}
+                        ></div>
+                        <span className="text-xs text-slate-500">{label}</span>
+                    </div>
+                ))}
             </div>
         </div>
     );
@@ -197,30 +79,30 @@ export const OrganicDonut = () => {
 
 export const StatisticsSection = () => {
     return (
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-6 w-full">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-5 w-full">
             <DonutChart
                 title="Attendance"
                 dataValues={[85, 15]}
                 labels={['Present', 'Absent']}
-                colors={['#008000', '#eee']}
+                colors={['#059669', '#e5e7eb']}
             />
             <DonutChart
-                title="Male/Female"
+                title="Male / Female"
                 dataValues={[60, 40]}
                 labels={['Male', 'Female']}
-                colors={['#2196F3', '#FF4081']}
+                colors={['#3b82f6', '#ec4899']}
             />
             <DonutChart
                 title="Organic"
                 dataValues={[75, 25]}
                 labels={['Organic', 'Others']}
-                colors={['#FF9800', '#eee']}
+                colors={['#f59e0b', '#e5e7eb']}
             />
             <DonutChart
                 title="Non-Organic"
                 dataValues={[45, 55]}
                 labels={['Non-Organic', 'Others']}
-                colors={['#9C27B0', '#eee']}
+                colors={['#8b5cf6', '#e5e7eb']}
             />
         </div>
     );

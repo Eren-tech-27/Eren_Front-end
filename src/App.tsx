@@ -17,6 +17,9 @@ import ClearanceForm from './pages/clearance/ClearanceForm';
 // Regional Offices
 import RegionLayout from './pages/regions/RegionLayout';
 
+// HRIS System
+import HRISSystem from './pages/HRISSystem';
+
 // Admin Settings
 import AdminSettings from './pages/admin/AdminSettings';
 
@@ -46,6 +49,9 @@ function App() {
 
           {/* Regional Offices */}
           <Route path="regions" element={<RegionLayout />} />
+
+          {/* HRIS System Overview */}
+          <Route path="hris" element={<HRISSystem />} />
 
           {/* Admin Settings */}
           <Route path="settings" element={<AdminSettings />} />
