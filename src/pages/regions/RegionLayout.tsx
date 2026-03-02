@@ -7,24 +7,21 @@ const RegionLayout = () => {
 
     return (
         <div className="space-y-6">
-            <div className="flex justify-between items-center">
-                <div>
-                    <h1 className="text-2xl font-bold text-gray-900">Regional Offices</h1>
-                    <p className="text-sm text-gray-500">Interactive map of regional deployments.</p>
-                </div>
+            <div className="page-header animate-fade-in-up">
+                <h1>Regional Offices</h1>
+                <p>Interactive map of regional deployments</p>
             </div>
 
             <div className="flex flex-col lg:flex-row gap-6 h-[600px]">
                 {/* Map Area */}
-                <div className="flex-1 bg-white p-6 rounded-xl shadow-sm border border-gray-100 h-full">
-                    <MapComponent
-                        selectedRegion={selectedRegion}
-                        onRegionSelect={setSelectedRegion}
-                    />
+                <div className="flex-1 pro-card overflow-hidden h-full animate-fade-in-up" style={{ animationDelay: '0.1s', opacity: 0 }}>
+                    <div className="p-6 h-full">
+                        <MapComponent selectedRegion={selectedRegion} onRegionSelect={setSelectedRegion} />
+                    </div>
                 </div>
 
                 {/* Sidebar Info Area */}
-                <div className="w-full lg:w-96 h-full overflow-y-auto">
+                <div className="w-full lg:w-96 h-full overflow-y-auto animate-fade-in-up" style={{ animationDelay: '0.2s', opacity: 0 }}>
                     <RegionStats regionId={selectedRegion} />
                 </div>
             </div>

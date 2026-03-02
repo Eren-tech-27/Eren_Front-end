@@ -1,5 +1,4 @@
-
-import { Search, Eye, CheckCircle, XCircle, Clock, MoreVertical, Edit } from 'lucide-react';
+import { Search, Eye, CheckCircle, XCircle, Clock, MoreVertical, Edit, Plus } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useState, useRef, useEffect } from 'react';
 
@@ -7,7 +6,6 @@ const ClearanceList = () => {
     const navigate = useNavigate();
     const [activeMenu, setActiveMenu] = useState<number | null>(null);
     const menuRef = useRef<HTMLDivElement>(null);
-
     const [filter, setFilter] = useState<'All' | 'Pending' | 'Approved'>('All');
 
     const clearances = [
@@ -22,162 +20,122 @@ const ClearanceList = () => {
                 setActiveMenu(null);
             }
         };
-
         document.addEventListener('mousedown', handleClickOutside);
-        return () => {
-            document.removeEventListener('mousedown', handleClickOutside);
-        };
+        return () => document.removeEventListener('mousedown', handleClickOutside);
     }, []);
 
-    const toggleMenu = (id: number) => {
-        setActiveMenu(activeMenu === id ? null : id);
+    const toggleMenu = (id: number) => setActiveMenu(activeMenu === id ? null : id);
+
+    const statusBadge: Record<string, string> = {
+        Approved: 'badge-success',
+        Rejected: 'badge-danger',
+        Pending: 'badge-warning',
     };
 
-    const getStatusColor = (status: string) => {
-        switch (status) {
-            case 'Approved': return 'bg-green-100 text-green-800';
-            case 'Rejected': return 'bg-red-100 text-red-800';
-            default: return 'bg-yellow-100 text-yellow-800';
-        }
+    const statusIcon: Record<string, JSX.Element> = {
+        Approved: <CheckCircle size={12} />,
+        Rejected: <XCircle size={12} />,
+        Pending: <Clock size={12} />,
     };
 
-    const getStatusIcon = (status: string) => {
-        switch (status) {
-            case 'Approved': return <CheckCircle size={16} />;
-            case 'Rejected': return <XCircle size={16} />;
-            default: return <Clock size={16} />;
-        }
-    };
+    const statCards = [
+        { label: 'Total Requests', value: clearances.length, gradient: 'linear-gradient(135deg, #059669, #10b981)' },
+        { label: 'Pending', value: clearances.filter(c => c.status === 'Pending').length, gradient: 'linear-gradient(135deg, #d97706, #f59e0b)' },
+        { label: 'Approved', value: clearances.filter(c => c.status === 'Approved').length, gradient: 'linear-gradient(135deg, #2563eb, #3b82f6)' },
+    ];
 
     return (
         <div className="space-y-6">
-            <div className="flex justify-between items-center">
+            <div className="page-header animate-fade-in-up flex items-start justify-between">
                 <div>
-                    <h1 className="text-2xl font-bold text-gray-900">Clearance Requests</h1>
-                    <p className="text-sm text-gray-500">Manage employee clearance processing.</p>
+                    <h1>Clearance Requests</h1>
+                    <p>Manage employee clearance processing</p>
                 </div>
-                <button className="bg-[var(--color-primary)] text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors">
-                    New Request
-                </button>
+                <button className="btn btn-primary"><Plus className="w-4 h-4" /> New Request</button>
             </div>
 
-            <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-visible">
-                <div className="p-4 border-b border-gray-200 flex justify-between items-center">
-                    <div className="flex gap-2">
-                        <button
-                            onClick={() => setFilter('All')}
-                            className={`px-3 py-1 text-sm font-medium rounded-lg ${filter === 'All' ? 'bg-[var(--color-primary)] text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
-                        >All</button>
-                        <button
-                            onClick={() => setFilter('Pending')}
-                            className={`px-3 py-1 text-sm font-medium rounded-lg ${filter === 'Pending' ? 'bg-yellow-500 text-white' : 'text-gray-500 hover:bg-gray-50'}`}
-                        >Pending</button>
-                        <button
-                            onClick={() => setFilter('Approved')}
-                            className={`px-3 py-1 text-sm font-medium rounded-lg ${filter === 'Approved' ? 'bg-green-600 text-white' : 'text-gray-500 hover:bg-gray-50'}`}
-                        >Approved</button>
-                    </div>
-                    <div className="flex gap-2">
-                        <div className="relative">
-                            <input
-                                type="text"
-                                placeholder="Search..."
-                                className="pl-9 pr-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-[var(--color-primary)]"
-                            />
-                            <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
+            {/* Stat Cards */}
+            <div className="grid grid-cols-3 gap-4">
+                {statCards.map((card, i) => (
+                    <div key={card.label} className="stat-card animate-fade-in-up" style={{ background: card.gradient, animationDelay: `${i * 0.1}s`, opacity: 0 }}>
+                        <div className="relative z-10">
+                            <p className="stat-label">{card.label}</p>
+                            <p className="stat-value">{card.value}</p>
                         </div>
                     </div>
-                </div>
-                <table className="min-w-full divide-y divide-gray-200">
-                    <thead className="bg-[#107d38] text-white">
-                        <tr>
-                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
-                                Employee
-                            </th>
-                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
-                                Purpose
-                            </th>
-                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
-                                Date Filed
-                            </th>
-                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
-                                Status
-                            </th>
-                            <th scope="col" className="relative px-6 py-3">
-                                <span className="sr-only">Actions</span>
-                            </th>
-                        </tr>
-                    </thead>
-                    <tbody className="bg-white divide-y divide-gray-200">
-                        {clearances
-                            .filter((item) => {
-                                if (filter === 'All') return true;
-                                if (filter === 'Pending') return item.status === 'Pending';
-                                if (filter === 'Approved') return item.status === 'Approved';
-                                return true;
-                            })
-                            .map((item) => (
-                            <tr key={item.id} className="hover:bg-gray-50 transition-colors">
-                                <td className="px-6 py-4 whitespace-nowrap">
-                                    <div className="flex items-center">
-                                        <div className="h-8 w-8 rounded-full bg-gray-200 flex items-center justify-center text-xs font-bold text-gray-500">
-                                            {item.name.charAt(0)}
-                                        </div>
-                                        <div className="ml-3">
-                                            <div className="text-sm font-medium text-gray-900">{item.name}</div>
-                                            <div className="text-xs text-gray-500">{item.position}</div>
-                                        </div>
-                                    </div>
-                                </td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                    {item.purpose}
-                                </td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                    {item.date}
-                                </td>
-                                <td className="px-6 py-4 whitespace-nowrap">
-                                    <span className={`px-2 inline-flex items-center gap-1 text-xs leading-5 font-semibold rounded-full ${getStatusColor(item.status)}`}>
-                                        {getStatusIcon(item.status)}
-                                        {item.status}
-                                    </span>
-                                </td>
-                                <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                    <div className="flex justify-end gap-2 relative">
-                                        <button
-                                            onClick={() => navigate('/dashboard/clearance/1')}
-                                            className="text-[var(--color-primary)] hover:text-green-900"
-                                            title="View Details"
-                                        >
-                                            <Eye size={18} />
-                                        </button>
-                                        <div className="relative">
-                                            <button
-                                                onClick={(e) => { e.stopPropagation(); toggleMenu(item.id); }}
-                                                className="text-gray-400 hover:text-gray-600"
-                                            >
-                                                <MoreVertical size={18} />
-                                            </button>
+                ))}
+            </div>
 
-                                            {activeMenu === item.id && (
-                                                <div
-                                                    ref={menuRef}
-                                                    className="absolute right-0 mt-2 w-32 bg-white rounded-md shadow-lg z-50 border border-gray-100 py-1 text-left"
-                                                >
-                                                    <button
-                                                        className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2"
-                                                        onClick={() => setActiveMenu(null)}
-                                                    >
-                                                        <Edit size={16} /> Edit
-                                                    </button>
-                                                </div>
-                                            )}
-                                        </div>
-                                    </div>
-                                </td>
-                            </tr>
+            <div className="pro-card animate-fade-in-up" style={{ animationDelay: '0.3s', opacity: 0 }}>
+                <div className="p-4 border-b border-gray-100 flex justify-between items-center flex-wrap gap-3">
+                    <div className="pro-tabs !border-none !p-0">
+                        {(['All', 'Pending', 'Approved'] as const).map(f => (
+                            <button key={f} onClick={() => setFilter(f)} className={`pro-tab ${filter === f ? 'active' : ''}`}>{f}</button>
                         ))}
-                    </tbody>
-                </table>
+                    </div>
+                    <div className="relative">
+                        <input type="text" placeholder="Search..." className="pro-input !w-56 !pl-9 !py-2" />
+                        <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
+                    </div>
+                </div>
+                <div className="overflow-x-auto">
+                    <table className="pro-table">
+                        <thead>
+                            <tr>
+                                <th>Employee</th>
+                                <th>Purpose</th>
+                                <th>Date Filed</th>
+                                <th>Status</th>
+                                <th className="text-right">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {clearances
+                                .filter(item => filter === 'All' ? true : item.status === filter)
+                                .map(item => (
+                                    <tr key={item.id}>
+                                        <td>
+                                            <div className="flex items-center gap-3">
+                                                <div className="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center text-xs font-bold text-emerald-700">
+                                                    {item.name.charAt(0)}
+                                                </div>
+                                                <div>
+                                                    <div className="text-sm font-medium text-gray-800">{item.name}</div>
+                                                    <div className="text-xs text-gray-400">{item.position}</div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>{item.purpose}</td>
+                                        <td>{item.date}</td>
+                                        <td>
+                                            <span className={`badge ${statusBadge[item.status] || 'badge-neutral'}`}>
+                                                {statusIcon[item.status]}{item.status}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <div className="flex justify-end gap-1 relative">
+                                                <button onClick={() => navigate('/dashboard/clearance/1')} className="btn-ghost btn-icon text-emerald-500 hover:bg-emerald-50" title="View Details">
+                                                    <Eye size={16} />
+                                                </button>
+                                                <div className="relative">
+                                                    <button onClick={(e) => { e.stopPropagation(); toggleMenu(item.id); }} className="btn-ghost btn-icon text-gray-400">
+                                                        <MoreVertical size={16} />
+                                                    </button>
+                                                    {activeMenu === item.id && (
+                                                        <div ref={menuRef} className="absolute right-0 mt-1 w-32 bg-white rounded-xl shadow-xl z-50 border border-gray-100 py-1">
+                                                            <button className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2" onClick={() => setActiveMenu(null)}>
+                                                                <Edit size={14} /> Edit
+                                                            </button>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ))}
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     );

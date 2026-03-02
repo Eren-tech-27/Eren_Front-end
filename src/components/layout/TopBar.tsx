@@ -1,134 +1,104 @@
+import { Bell, Search, ChevronRight, LogOut } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
 
-import React, { useEffect, useRef, useState } from 'react';
-import './topbar.css';
-import {Bell, ChevronDown } from 'lucide-react';
-import NotificationDropdown from './NotificationDropdown';
-import ProfileMenu from './ProfileMenu';
-
-type NotificationItem = {
-    id: string;
-    title: string;
-    description?: string;
-    time?: string;
-    read?: boolean;
+const routeLabels: Record<string, string> = {
+    '/dashboard': 'Dashboard',
+    '/dashboard/personal-records': 'Employee Management',
+    '/dashboard/attendance': 'Time & Attendance',
+    '/dashboard/leave': 'Leave Management',
+    '/dashboard/payroll': 'Payroll',
+    '/dashboard/compliance': 'Government Compliance',
+    '/dashboard/self-service': 'Employee Self-Service',
+    '/dashboard/assets': 'Asset Management',
+    '/dashboard/clearance': 'Clearance',
+    '/dashboard/hris': 'HRIS System',
+    '/dashboard/settings': 'Admin Settings',
 };
 
 const TopBar = () => {
-    const [showNotifications, setShowNotifications] = useState(false);
-    const [showProfile, setShowProfile] = useState(false);
+    const [time, setTime] = useState(new Date());
+    const location = useLocation();
+    const navigate = useNavigate();
+    const { role, logout } = useAuth();
 
-    const [notifications, setNotifications] = useState<NotificationItem[]>([
-        { id: '1', title: 'New employee added', description: 'Jane Smith was added to HR.', time: '2m', read: false },
-        { id: '2', title: 'Payroll processed', description: 'February payroll has been processed.', time: '1h', read: false },
-        { id: '3', title: 'Policy update', description: 'Leave policy updated.', time: '1d', read: true },
-    ]);
-
-    const containerRef = useRef<HTMLDivElement | null>(null);
+    const handleLogout = () => {
+        logout();
+        navigate('/login');
+    };
 
     useEffect(() => {
-        function handleClickOutside(e: MouseEvent) {
-            if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
-                setShowNotifications(false);
-                setShowProfile(false);
-            }
-        }
-        document.addEventListener('mousedown', handleClickOutside);
-        return () => document.removeEventListener('mousedown', handleClickOutside);
+        const timer = setInterval(() => setTime(new Date()), 1000);
+        return () => clearInterval(timer);
     }, []);
 
-    const unreadCount = notifications.filter((n) => !n.read).length;
-
-    const markAsRead = (id: string) => {
-        setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, read: true } : n)));
+    const formatTime = (d: Date) => {
+        return d.toLocaleTimeString('en-US', { hour12: true, hour: '2-digit', minute: '2-digit' });
     };
 
-    const markAllAsRead = () => {
-        setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+    const formatDate = (d: Date) => {
+        return d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
     };
 
-    const removeNotification = (id: string) => {
-        setNotifications((prev) => prev.filter((n) => n.id !== id));
-    };
+    const currentPage = routeLabels[location.pathname] || 'Page';
 
     return (
-        <header className="h-16 flex items-center justify-between px-6 sticky top-0 z-10 border-b border-white/20 topbar-backdrop">
-            {/* Left: Title + Search */}
-            <div className="flex items-center gap-5 flex-1">
-                <h1 className="text-2xl font-extrabold tracking-tight whitespace-nowrap logo-gradient">
-                    HRIS SYSTEM
-                </h1>
+        <header className="h-16 flex items-center justify-between px-6 sticky top-0 z-10 bg-white/80 backdrop-blur-xl border-b border-gray-100">
+            {/* Left: Breadcrumb */}
+            <div className="flex items-center gap-2 text-sm">
+                <span className="text-gray-400 font-medium">HRIS</span>
+                <ChevronRight className="w-3.5 h-3.5 text-gray-300" />
+                <span className="font-semibold text-gray-800">{currentPage}</span>
             </div>
 
-            {/* Right: Notifications & Profile */}
-            <div className="flex items-center gap-4 relative" ref={containerRef}>
-                {/* Notification Bell */}
-                <div className="relative">
-                    <button
-                        onClick={() => {
-                            setShowNotifications((s) => !s);
-                            setShowProfile(false);
-                        }}
-                        aria-label="Notifications"
-                        className="relative p-2.5 text-slate-500 hover:text-green-600 hover:bg-green-50 rounded-xl transition-all duration-200"
-                    >
-                        <Bell className="h-5 w-5" />
-                        {unreadCount > 0 && (
-                            <span className="absolute top-1.5 right-1.5 flex h-2.5 w-2.5">
-                                <span className="absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75 animate-ping"></span>
-                                <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-red-500"></span>
-                            </span>
-                        )}
-                    </button>
+            {/* Center: Search + Active badge */}
+            <div className="flex items-center gap-4">
+                <div className="relative hidden md:block">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                    <input
+                        type="text"
+                        placeholder="Search..."
+                        className="w-56 pl-9 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-full text-sm text-gray-700 placeholder-gray-400 focus:outline-none focus:border-emerald-400 focus:bg-white focus:ring-2 focus:ring-emerald-50 transition-all"
+                    />
+                </div>
+                <div className="bg-gradient-to-r from-emerald-600 to-emerald-500 text-white px-4 py-1.5 rounded-full text-xs font-semibold shadow-sm flex items-center gap-2">
+                    <span className="w-1.5 h-1.5 bg-emerald-300 rounded-full animate-pulse" />
+                    245 Active Employees
+                </div>
+            </div>
 
-                    {showNotifications && (
-                        <div className="absolute right-0 mt-2">
-                            <NotificationDropdown
-                                notifications={notifications}
-                                onMarkRead={markAsRead}
-                                onMarkAllRead={markAllAsRead}
-                                onRemove={removeNotification}
-                            />
-                        </div>
-                    )}
+            {/* Right: Clock + Notifications + Profile */}
+            <div className="flex items-center gap-4">
+                <div className="text-right hidden sm:block">
+                    <p className="text-sm font-bold text-gray-800 leading-tight">{formatTime(time)}</p>
+                    <p className="text-[11px] text-gray-400 leading-tight">{formatDate(time)}</p>
                 </div>
 
-                {/* Divider */}
-                <div className="h-8 w-px bg-slate-200"></div>
+                <button className="relative p-2 rounded-xl hover:bg-gray-100 transition-colors group">
+                    <Bell className="h-5 w-5 text-gray-500 group-hover:text-gray-700 transition-colors" />
+                    <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-rose-500 rounded-full ring-2 ring-white" />
+                </button>
 
-                {/* User Profile */}
-                <div>
-                    <div
-                        onClick={() => {
-                            setShowProfile((s) => !s);
-                            setShowNotifications(false);
-                        }}
-                        className="flex items-center gap-3 cursor-pointer hover:bg-slate-50 p-2 pr-3 rounded-xl transition-all duration-200"
-                    >
-                        <div className="relative">
-                            <div className="h-9 w-9 rounded-full bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center text-white text-sm font-bold shadow-md shadow-green-500/20">
-                                JD
-                            </div>
-                            {/* Online indicator */}
-                            <div className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full bg-green-400 border-2 border-white"></div>
-                        </div>
-                        <div className="hidden md:block">
-                            <p className="text-sm font-semibold text-slate-700 leading-tight">John Doe</p>
-                            <p className="text-xs text-slate-400 font-medium">Administrator</p>
-                        </div>
-                        <ChevronDown className="h-4 w-4 text-slate-400" />
+                <div className="flex items-center gap-3 pl-4 border-l border-gray-200">
+                    <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-600 flex items-center justify-center text-white text-sm font-bold shadow-sm">
+                        {role === 'admin' ? 'A' : 'U'}
                     </div>
-
-                    {showProfile && (
-                        <div className="absolute right-0 mt-2">
-                            <ProfileMenu
-                                userName="John Doe"
-                                role="Administrator"
-                                onLogout={() => console.log('logout')}
-                                onViewProfile={() => console.log('view profile')}
-                                onSettings={() => console.log('settings')}
-                            />
-                        </div>
-                    )}
+                    <div className="hidden lg:block">
+                        <p className="text-xs font-semibold text-gray-800">
+                            {role === 'admin' ? 'Admin User' : 'Employee User'}
+                        </p>
+                        <p className="text-[10px] text-gray-400">
+                            {role === 'admin' ? 'HR Administrator' : 'Employee'}
+                        </p>
+                    </div>
+                    <button
+                        onClick={handleLogout}
+                        className="p-2 rounded-xl hover:bg-red-50 transition-colors group"
+                        title="Log Out"
+                    >
+                        <LogOut className="h-5 w-5 text-gray-400 group-hover:text-red-500 transition-colors" />
+                    </button>
                 </div>
             </div>
         </header>
