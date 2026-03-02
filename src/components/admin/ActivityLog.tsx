@@ -37,10 +37,10 @@ const ActivityLog = () => {
                 <table className="min-w-full divide-y divide-gray-200">
                     <thead className="bg-[var(--color-primary)]">
                         <tr>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Time</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">User</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Action</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Details</th>
+                            <th className="px-6 py-3 text-center text-xs font-medium text-white uppercase tracking-wider">Time</th>
+                            <th className="px-6 py-3 text-center text-xs font-medium text-white uppercase tracking-wider">User</th>
+                            <th className="px-6 py-3 text-center text-xs font-medium text-white uppercase tracking-wider">Action</th>
+                            <th className="px-6 py-3 text-center text-xs font-medium text-white uppercase tracking-wider">Details</th>
                         </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">

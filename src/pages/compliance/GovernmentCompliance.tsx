@@ -307,7 +307,7 @@ const GovernmentCompliance = () => {
                     {activeTab === 'history' && (
                         <div className="space-y-5">
                             <div className="flex justify-between items-center">
-                                <h3 className="text-base font-bold text-gray-800">Employment Status History (Gov't Reporting)</h3>
+                                <h3 className="text-base font-bold text-gray-800">Employment Status History (Government Reporting)</h3>
                                 <button onClick={() => setShowHistoryReportModal(true)} className="btn btn-primary"><Download className="w-4 h-4" /> Generate Reports</button>
                             </div>
                             <div className="overflow-x-auto rounded-xl border border-gray-100">

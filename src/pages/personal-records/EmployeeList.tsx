@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Search, Plus, Eye, Edit, Trash2, X, Users, UserCheck, UserX, Filter } from 'lucide-react';
+import { Search, Plus, Eye, Edit, X, Users, UserCheck, UserX, Filter } from 'lucide-react';
 
 interface Employee {
     id: number;
@@ -35,7 +35,6 @@ const EmployeeList = () => {
     const [showAddModal, setShowAddModal] = useState(false);
     const [showEditModal, setShowEditModal] = useState(false);
     const [showViewPanel, setShowViewPanel] = useState(false);
-    const [showDeleteDialog, setShowDeleteDialog] = useState(false);
     const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
     const [formData, setFormData] = useState({ name: '', position: '', department: '', status: 'Active' as Employee['status'], contact: '', email: '' });
 
@@ -75,12 +74,6 @@ const EmployeeList = () => {
         setSelectedEmployee(null);
     };
 
-    const handleDelete = () => {
-        if (!selectedEmployee) return;
-        setEmployees(employees.filter(e => e.id !== selectedEmployee.id));
-        setShowDeleteDialog(false);
-        setSelectedEmployee(null);
-    };
 
     const openEdit = (emp: Employee) => {
         setSelectedEmployee(emp);
@@ -93,16 +86,24 @@ const EmployeeList = () => {
         setShowViewPanel(true);
     };
 
-    const openDelete = (emp: Employee) => {
-        setSelectedEmployee(emp);
-        setShowDeleteDialog(true);
-    };
 
     const FormFields = ({ onSubmit, submitLabel }: { onSubmit: () => void; submitLabel: string }) => (
         <div className="space-y-4">
             <div>
                 <label className="pro-label">Full Name</label>
-                <input type="text" value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} className="pro-input" placeholder="Last Name, First Name" />
+                <select
+                    value={formData.name}
+                    onChange={e => setFormData({ ...formData, name: e.target.value })}
+                    className="pro-select"
+                >
+                    <option value="" disabled>Select Employee</option>
+                    <option value="Dela Cruz, Juan">Dela Cruz, Juan</option>
+                    <option value="Santos, Maria">Santos, Maria</option>
+                    <option value="Reyes, Jose">Reyes, Jose</option>
+                    <option value="Garcia, Ana">Garcia, Ana</option>
+                    <option value="Bautista, Pedro">Bautista, Pedro</option>
+                    <option value="Fernandez, Rosa">Fernandez, Rosa</option>
+                </select>
             </div>
             <div className="grid grid-cols-2 gap-4">
                 <div>
@@ -161,7 +162,7 @@ const EmployeeList = () => {
 
             {/* Stat Cards */}
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 animate-fade-in-up" style={{ animationDelay: '0.1s', opacity: 0 }}>
-                {statItems.map((item, i) => (
+                {statItems.map((item) => (
                     <button
                         key={item.label}
                         onClick={() => setFilterStatus(item.badge)}
@@ -241,9 +242,6 @@ const EmployeeList = () => {
                                             </button>
                                             <button onClick={() => openEdit(emp)} className="btn-ghost btn-icon text-emerald-600 hover:bg-emerald-50" title="Edit">
                                                 <Edit className="w-4 h-4" />
-                                            </button>
-                                            <button onClick={() => openDelete(emp)} className="btn-ghost btn-icon text-red-500 hover:bg-red-50" title="Delete">
-                                                <Trash2 className="w-4 h-4" />
                                             </button>
                                         </div>
                                     </td>
@@ -327,24 +325,6 @@ const EmployeeList = () => {
                 </div>
             )}
 
-            {/* Delete Dialog */}
-            {showDeleteDialog && selectedEmployee && (
-                <div className="pro-modal-overlay">
-                    <div className="pro-modal max-w-sm text-center" onClick={e => e.stopPropagation()}>
-                        <div className="p-6">
-                            <div className="w-14 h-14 rounded-2xl bg-red-50 flex items-center justify-center mx-auto mb-4">
-                                <Trash2 className="w-7 h-7 text-red-500" />
-                            </div>
-                            <h3 className="text-lg font-bold text-gray-900 mb-2">Delete Employee</h3>
-                            <p className="text-sm text-gray-500 mb-6">Are you sure you want to delete <strong>{selectedEmployee.name}</strong>? This action cannot be undone.</p>
-                            <div className="flex gap-3 justify-center">
-                                <button onClick={() => setShowDeleteDialog(false)} className="btn btn-secondary">Cancel</button>
-                                <button onClick={handleDelete} className="btn btn-danger">Delete</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            )}
         </div>
     );
 };

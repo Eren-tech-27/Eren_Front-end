@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { CheckCircle, AlertTriangle, XCircle, Clock, Upload, X, Plus, Check, Edit } from 'lucide-react';
+import { CheckCircle, AlertTriangle, XCircle, Clock, Upload, X, Plus, Check, Edit, Eye } from 'lucide-react';
 
 type Tab = 'dtr' | 'overtime' | 'setup';
 
@@ -25,14 +25,60 @@ const AttendanceTable = () => {
         { label: 'Total Hours', value: '1,760', icon: Clock, gradient: 'linear-gradient(135deg, #6366f1, #818cf8)' },
     ];
 
-    const dtrRecords = [
-        { empId: 'EMP-001', name: 'Dela Cruz, Juan', timeIn: '07:55 AM', timeOut: '05:01 PM', status: 'Present', late: '-', overtime: '0:01' },
-        { empId: 'EMP-002', name: 'Santos, Maria', timeIn: '08:15 AM', timeOut: '05:30 PM', status: 'Late', late: '15 min', overtime: '0:30' },
-        { empId: 'EMP-003', name: 'Reyes, Jose', timeIn: '-', timeOut: '-', status: 'Absent', late: '-', overtime: '-' },
-        { empId: 'EMP-004', name: 'Garcia, Ana', timeIn: '07:45 AM', timeOut: '06:00 PM', status: 'Present', late: '-', overtime: '1:00' },
-        { empId: 'EMP-005', name: 'Bautista, Pedro', timeIn: '08:05 AM', timeOut: '05:00 PM', status: 'Late', late: '5 min', overtime: '-' },
-        { empId: 'EMP-006', name: 'Fernandez, Rosa', timeIn: '07:50 AM', timeOut: '05:15 PM', status: 'Present', late: '-', overtime: '0:15' },
-    ];
+    const [dtrRecords, setDtrRecords] = useState(() => {
+        const saved = localStorage.getItem('attendance_logs');
+        const userLogs = saved ? JSON.parse(saved) : [];
+        const baseRecords = [
+            { empId: 'EMP-001', name: 'Dela Cruz, Juan', timeIn: '07:55 AM', timeOut: '05:01 PM', status: 'Present', late: '-', overtime: '0:01' },
+            { empId: 'EMP-002', name: 'Santos, Maria', timeIn: '08:15 AM', timeOut: '05:30 PM', status: 'Late', late: '15 min', overtime: '0:30' },
+            { empId: 'EMP-003', name: 'Reyes, Jose', timeIn: '-', timeOut: '-', status: 'Absent', late: '-', overtime: '-' },
+            { empId: 'EMP-004', name: 'Garcia, Ana', timeIn: '07:45 AM', timeOut: '06:00 PM', status: 'Present', late: '-', overtime: '1:00' },
+            { empId: 'EMP-005', name: 'Bautista, Pedro', timeIn: '08:05 AM', timeOut: '05:00 PM', status: 'Late', late: '5 min', overtime: '-' },
+            { empId: 'EMP-006', name: 'Fernandez, Rosa', timeIn: '07:50 AM', timeOut: '05:15 PM', status: 'Present', late: '-', overtime: '0:15' },
+        ];
+        // Combine with user logs, mapping fields accordingly
+        const mappedUserLogs = userLogs.map((l: any) => ({
+            empId: 'EMP-USER',
+            name: 'Employee User',
+            timeIn: l.timeIn,
+            timeOut: l.timeOut,
+            status: l.status,
+            late: '-',
+            overtime: '0:00'
+        }));
+        return [...mappedUserLogs, ...baseRecords];
+    });
+
+    useEffect(() => {
+        const handleStorageChange = () => {
+            const saved = localStorage.getItem('attendance_logs');
+            if (saved) {
+                const userLogs = JSON.parse(saved);
+                const mappedUserLogs = userLogs.map((l: any) => ({
+                    empId: 'EMP-USER',
+                    name: 'Employee User',
+                    timeIn: l.timeIn,
+                    timeOut: l.timeOut,
+                    status: l.status,
+                    late: '-',
+                    overtime: '0:00'
+                }));
+                // Using a callback to ensure we have latest state
+                setDtrRecords(prev => {
+                    const baseRecords = prev.filter(r => r.empId !== 'EMP-USER');
+                    return [...mappedUserLogs, ...baseRecords];
+                });
+            }
+        };
+
+        window.addEventListener('storage', handleStorageChange);
+        const checkInterval = setInterval(handleStorageChange, 2000);
+
+        return () => {
+            window.removeEventListener('storage', handleStorageChange);
+            clearInterval(checkInterval);
+        };
+    }, []);
 
     const overtimeRequests = [
         { date: '2026-02-24', employee: 'Dela Cruz, Juan', duration: '2 hours', reason: 'Project deadline', status: 'Pending' },
@@ -186,7 +232,7 @@ const AttendanceTable = () => {
                                 <table className="pro-table">
                                     <thead>
                                         <tr>
-                                            {['Employee ID', 'Name', 'Time In', 'Time Out', 'Status', 'Late', 'Overtime'].map(h => (
+                                            {['Employee ID', 'Name', 'Time In', 'Time Out', 'Status', 'Late', 'Overtime', 'Actions'].map(h => (
                                                 <th key={h}>{h}</th>
                                             ))}
                                         </tr>
@@ -201,6 +247,13 @@ const AttendanceTable = () => {
                                                 <td><span className={`badge ${statusBadge[r.status]}`}><span className="badge-dot" />{r.status}</span></td>
                                                 <td>{r.late}</td>
                                                 <td>{r.overtime}</td>
+                                                <td>
+                                                    <div className="flex gap-1 justify-center">
+                                                        <button className="btn-ghost btn-icon text-blue-500 hover:bg-blue-50" title="Edit"><Edit className="w-4 h-4" /></button>
+                                                        <button className="btn-ghost btn-icon text-gray-400 hover:bg-gray-100" title="Hide"><Eye className="w-4 h-4" /></button>
+                                                        <button className="btn-ghost btn-icon text-rose-500 hover:bg-rose-50" title="Block"><XCircle className="w-4 h-4" /></button>
+                                                    </div>
+                                                </td>
                                             </tr>
                                         ))}
                                     </tbody>

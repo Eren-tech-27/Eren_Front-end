@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { User, FileText, Calendar, Bell, Clock, Download, Eye } from 'lucide-react';
+import { User, FileText, Calendar, Bell, Download, Eye } from 'lucide-react';
 
 type Tab = 'profile' | 'payslips' | 'leave' | 'attendance' | 'requests';
 
@@ -10,7 +10,6 @@ const EmployeeSelfService = () => {
         { id: 'profile' as Tab, label: 'My Profile', icon: User },
         { id: 'payslips' as Tab, label: 'My Payslips', icon: FileText },
         { id: 'leave' as Tab, label: 'My Leave', icon: Calendar },
-        { id: 'attendance' as Tab, label: 'My Attendance', icon: Clock },
         { id: 'requests' as Tab, label: 'My Requests', icon: Bell },
     ];
 
@@ -36,12 +35,6 @@ const EmployeeSelfService = () => {
         sick: { total: 15, used: 3, remaining: 12 },
         emergency: { total: 5, used: 1, remaining: 4 },
     };
-
-    const myAttendance = [
-        { date: '2026-02-25', timeIn: '07:55 AM', timeOut: '05:01 PM', status: 'Present', hours: '8.1' },
-        { date: '2026-02-24', timeIn: '08:10 AM', timeOut: '05:30 PM', status: 'Late', hours: '8.3' },
-        { date: '2026-02-23', timeIn: '07:45 AM', timeOut: '06:00 PM', status: 'Present', hours: '9.25' },
-    ];
 
     const myRequests = [
         { type: 'Leave Request', date: '2026-02-20', details: 'Vacation Leave - 3 days', status: 'Pending' },
@@ -147,25 +140,6 @@ const EmployeeSelfService = () => {
                                     <p className="text-[10px] text-gray-400 mt-1.5">{l.used} used</p>
                                 </div>
                             ))}
-                        </div>
-                    )}
-
-                    {activeTab === 'attendance' && (
-                        <div className="overflow-x-auto rounded-xl border border-gray-100">
-                            <table className="pro-table">
-                                <thead><tr>{['Date', 'Time In', 'Time Out', 'Status', 'Total Hours'].map(h => <th key={h}>{h}</th>)}</tr></thead>
-                                <tbody>
-                                    {myAttendance.map((r, i) => (
-                                        <tr key={i}>
-                                            <td>{r.date}</td>
-                                            <td className="font-mono text-xs">{r.timeIn}</td>
-                                            <td className="font-mono text-xs">{r.timeOut}</td>
-                                            <td><span className={`badge ${statusBadge[r.status]}`}><span className="badge-dot" />{r.status}</span></td>
-                                            <td>{r.hours}h</td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
                         </div>
                     )}
 

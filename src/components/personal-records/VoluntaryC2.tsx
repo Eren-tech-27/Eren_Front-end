@@ -17,12 +17,12 @@ export const VoluntaryC2 = () => {
                     <table className="w-full text-sm text-left">
                         <thead className="bg-gray-50 text-gray-500 font-medium">
                             <tr>
-                                <th className="px-4 py-3 rounded-tl-lg">Organization</th>
-                                <th className="px-4 py-3">Position</th>
-                                <th className="px-4 py-3">From</th>
-                                <th className="px-4 py-3">To</th>
-                                <th className="px-4 py-3">Hours</th>
-                                <th className="px-4 py-3 rounded-tr-lg">Action</th>
+                                <th className="px-4 py-3 text-center rounded-tl-lg">Organization</th>
+                                <th className="px-4 py-3 text-center">Position</th>
+                                <th className="px-4 py-3 text-center">From</th>
+                                <th className="px-4 py-3 text-center">To</th>
+                                <th className="px-4 py-3 text-center">Hours</th>
+                                <th className="px-4 py-3 text-center rounded-tr-lg">Action</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-100">
@@ -54,13 +54,13 @@ export const VoluntaryC2 = () => {
                     <table className="w-full text-sm text-left">
                         <thead className="bg-gray-50 text-gray-500 font-medium">
                             <tr>
-                                <th className="px-4 py-3 rounded-tl-lg">Title of Learning</th>
-                                <th className="px-4 py-3">Type</th>
-                                <th className="px-4 py-3">From</th>
-                                <th className="px-4 py-3">To</th>
-                                <th className="px-4 py-3">Hours</th>
-                                <th className="px-4 py-3">Conducted By</th>
-                                <th className="px-4 py-3 rounded-tr-lg">Action</th>
+                                <th className="px-4 py-3 text-center rounded-tl-lg">Title of Learning</th>
+                                <th className="px-4 py-3 text-center">Type</th>
+                                <th className="px-4 py-3 text-center">From</th>
+                                <th className="px-4 py-3 text-center">To</th>
+                                <th className="px-4 py-3 text-center">Hours</th>
+                                <th className="px-4 py-3 text-center">Conducted By</th>
+                                <th className="px-4 py-3 text-center rounded-tr-lg">Action</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-100">

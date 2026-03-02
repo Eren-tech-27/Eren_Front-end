@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Clock, CheckCircle, XCircle, AlertTriangle, Plus, X, Eye, Calendar } from 'lucide-react';
+import { Clock, CheckCircle, XCircle, AlertTriangle, Plus, X, Calendar } from 'lucide-react';
 
 type Tab = 'request' | 'balance' | 'history';
 type LeaveStatus = 'Pending' | 'Approved' | 'Rejected';
@@ -134,7 +134,7 @@ const LeaveManagement = () => {
                             <table className="pro-table">
                                 <thead>
                                     <tr>
-                                        {['Employee', 'Department', 'Leave Type', 'Start Date', 'End Date', 'Days', 'Status', 'Actions'].map(h => (
+                                        {['Employee', 'Department', 'Leave Type', 'Start Date', 'End Date', 'Days', 'Status'].map(h => (
                                             <th key={h}>{h}</th>
                                         ))}
                                     </tr>
@@ -149,9 +149,6 @@ const LeaveManagement = () => {
                                             <td>{r.endDate}</td>
                                             <td className="!font-semibold">{r.days}</td>
                                             <td><span className={`badge ${statusBadge[r.status]}`}><span className="badge-dot" />{r.status}</span></td>
-                                            <td>
-                                                <button className="btn-ghost btn-icon text-blue-500 hover:bg-blue-50"><Eye className="w-4 h-4" /></button>
-                                            </td>
                                         </tr>
                                     ))}
                                 </tbody>
@@ -233,7 +230,18 @@ const LeaveManagement = () => {
                             <button onClick={() => setShowApplyModal(false)} className="btn-ghost btn-icon"><X className="w-5 h-5 text-gray-400" /></button>
                         </div>
                         <div className="pro-modal-body space-y-4">
-                            <div><label className="pro-label">Employee</label><input type="text" className="pro-input" placeholder="Search employee..." /></div>
+                            <div>
+                                <label className="pro-label">Employee</label>
+                                <select className="pro-select">
+                                    <option value="" disabled selected>Select Employee</option>
+                                    <option>Dela Cruz, Juan</option>
+                                    <option>Santos, Maria</option>
+                                    <option>Reyes, Jose</option>
+                                    <option>Garcia, Ana</option>
+                                    <option>Bautista, Pedro</option>
+                                    <option>Fernandez, Rosa</option>
+                                </select>
+                            </div>
                             <div>
                                 <label className="pro-label">Leave Type</label>
                                 <select className="pro-select">

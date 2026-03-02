@@ -25,7 +25,7 @@ const AccessManagement = () => {
                 <table className="min-w-full divide-y divide-gray-200">
                     <thead className="bg-[var(--color-primary)]">
                         <tr>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider w-64">
+                            <th className="px-6 py-3 text-center text-xs font-medium text-white uppercase tracking-wider w-64">
                                 Module / Permission
                             </th>
                             {roles.map(role => (

@@ -1,15 +1,21 @@
 import { useState } from 'react';
 import {
     Home, Users, Clock, FileText, DollarSign, Shield, UserCircle,
-    Package, Settings, ChevronLeft, ChevronRight
+    Package, Settings, ChevronLeft, ChevronRight, LogOut
 } from 'lucide-react';
-import { NavLink } from 'react-router-dom';
+import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import logo from '../../assets/logo.svg';
 
 const Sidebar = () => {
     const [collapsed, setCollapsed] = useState(false);
-    const { role } = useAuth();
+    const { role, logout } = useAuth();
+    const navigate = useNavigate();
+
+    const handleLogout = () => {
+        logout();
+        navigate('/login');
+    };
 
     const mainNav = [
         { icon: Home, label: 'Dashboard', path: '/dashboard' },
@@ -21,13 +27,15 @@ const Sidebar = () => {
         { icon: Clock, label: 'Time & Attendance', path: '/dashboard/attendance' },
         { icon: FileText, label: 'Leave Management', path: '/dashboard/leave' },
         { icon: DollarSign, label: 'Payroll', path: '/dashboard/payroll' },
-        { icon: Shield, label: 'Gov. Compliance', path: '/dashboard/compliance' },
+        { icon: Shield, label: 'Government Compliance', path: '/dashboard/compliance' },
     ];
 
-    // User only sees Self-Service and Leave
+    // User only sees Self-Service, Leave, and Government Compliance
     const userNav = [
         { icon: UserCircle, label: 'Self-Service', path: '/dashboard/self-service' },
+        { icon: Clock, label: 'Attendance Log', path: '/dashboard/my-attendance' },
         { icon: FileText, label: 'Leave Management', path: '/dashboard/leave' },
+        { icon: Shield, label: 'Government Compliance', path: '/dashboard/compliance' },
     ];
 
     const moduleNav = [
@@ -109,6 +117,17 @@ const Sidebar = () => {
             </nav>
 
             {/* User Section & Collapse */}
+            <button
+                    onClick={() => setCollapsed(!collapsed)}
+                    className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-xl text-emerald-200/60 hover:bg-white/8 hover:text-white transition-all text-xs font-medium"
+                >
+                    {collapsed ? <ChevronRight className="w-4 h-4" /> : (
+                        <>
+                            <ChevronLeft className="w-4 h-4" />
+                            <span>Collapse</span>
+                        </>
+                    )}
+                </button>
             <div className="border-t border-white/10 p-3 space-y-2">
                 {!collapsed && (
                     <div className="flex items-center gap-3 px-2 py-2 rounded-xl bg-white/5">
@@ -125,16 +144,13 @@ const Sidebar = () => {
                         </div>
                     </div>
                 )}
+                
                 <button
-                    onClick={() => setCollapsed(!collapsed)}
-                    className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-xl text-emerald-200/60 hover:bg-white/8 hover:text-white transition-all text-xs font-medium"
+                    onClick={handleLogout}
+                    className={`w-full flex items-center gap-2 px-3 py-2.5 rounded-xl border border-rose-500/30 text-white hover:bg-rose-500/20 hover:border-rose-500/50 transition-all text-sm font-semibold shadow-lg shadow-rose-950/20 ${collapsed ? 'justify-center px-0' : 'px-4'}`}
                 >
-                    {collapsed ? <ChevronRight className="w-4 h-4" /> : (
-                        <>
-                            <ChevronLeft className="w-4 h-4" />
-                            <span>Collapse</span>
-                        </>
-                    )}
+                    <LogOut className="w-[18px] h-[18px] text-rose-400 group-hover:text-rose-300" />
+                    {!collapsed && <span>Log Out</span>}
                 </button>
             </div>
         </div>
