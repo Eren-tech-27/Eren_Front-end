@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { CheckCircle, AlertTriangle, XCircle, Clock, Upload, X, Plus, Check, Edit, Eye } from 'lucide-react';
 
 type Tab = 'dtr' | 'overtime' | 'setup';
@@ -293,9 +293,6 @@ const AttendanceTable = () => {
                         <div className="space-y-5">
                             <div className="flex justify-between items-center">
                                 <h3 className="text-base font-bold text-gray-800">Overtime Requests</h3>
-                                <button onClick={() => setShowOvertimeModal(true)} className="btn btn-primary">
-                                    <Plus className="w-4 h-4" /> Request Overtime
-                                </button>
                             </div>
                             <div className="overflow-x-auto rounded-xl border border-gray-100">
                                 <table className="pro-table">
