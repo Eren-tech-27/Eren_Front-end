@@ -17,7 +17,7 @@ const Sidebar = () => {
 
     // Admin sees all HR management pages
     const hrNav = [
-        { icon: Users, label: 'Employee Mgmt', path: '/dashboard/personal-records' },
+        { icon: Users, label: 'Employee Management', path: '/dashboard/personal-records' },
         { icon: Clock, label: 'Time & Attendance', path: '/dashboard/attendance' },
         { icon: FileText, label: 'Leave Management', path: '/dashboard/leave' },
         { icon: DollarSign, label: 'Payroll', path: '/dashboard/payroll' },
@@ -32,7 +32,7 @@ const Sidebar = () => {
 
     const moduleNav = [
         { icon: UserCircle, label: 'Self-Service', path: '/dashboard/self-service' },
-        { icon: Package, label: 'Asset Mgmt', path: '/dashboard/assets' },
+        { icon: Package, label: 'Asset Management', path: '/dashboard/assets' },
     ];
 
     const systemNav = [
