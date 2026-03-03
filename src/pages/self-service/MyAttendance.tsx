@@ -4,28 +4,17 @@ import { Clock, Send, Play, Square, Trash2 } from 'lucide-react';
 const MyAttendance = () => {
     const [currentTime, setCurrentTime] = useState(new Date());
     
-    // Initialize state from localStorage to persist across page loads/logouts
-    const [attendanceForm, setAttendanceForm] = useState(() => {
-        const savedShift = localStorage.getItem('active_shift');
-        if (savedShift) return JSON.parse(savedShift);
-        return { timeIn: '', timeOut: '', overtime: '0', remarks: '' };
-    });
+    // Pure React State - NO localStorage. 
+    // This guarantees it will reset every time you restart/refresh the page.
+    const [attendanceForm, setAttendanceForm] = useState({ timeIn: '', timeOut: '', overtime: '0', remarks: '' });
+    const [punchedIn, setPunchedIn] = useState(false);
+    const [punchedOut, setPunchedOut] = useState(false);
 
-    const [punchedIn, setPunchedIn] = useState(() => {
-        const savedShift = localStorage.getItem('active_shift');
-        return savedShift ? JSON.parse(savedShift).timeIn !== '' : false;
-    });
-
-    const [punchedOut, setPunchedOut] = useState(() => {
-        const savedShift = localStorage.getItem('active_shift');
-        return savedShift ? JSON.parse(savedShift).timeOut !== '' : false;
-    });
-
-    // Initializes with saved browser logs, or an empty array []
-    const [myAttendance, setMyAttendance] = useState(() => {
-        const saved = localStorage.getItem('attendance_logs');
-        return saved ? JSON.parse(saved) : []; 
-    });
+    // Initialized with a sample mock array instead of fetching from localStorage
+    const [myAttendance, setMyAttendance] = useState([
+        { id: 1, date: '2026-03-02', timeIn: '08:00 AM', timeOut: '05:00 PM', status: 'Present', hours: '8.0', remarks: 'Regular Shift' },
+        { id: 2, date: '2026-03-01', timeIn: '07:45 AM', timeOut: '04:45 PM', status: 'Present', hours: '8.0', remarks: 'Early Shift' },
+    ]);
 
     // Live Clock Timer
     useEffect(() => {
@@ -35,13 +24,6 @@ const MyAttendance = () => {
         return () => clearInterval(timer);
     }, []);
 
-    // Automatically save the active shift to localStorage whenever the form updates
-    useEffect(() => {
-        if (punchedIn) {
-            localStorage.setItem('active_shift', JSON.stringify(attendanceForm));
-        }
-    }, [attendanceForm, punchedIn]);
-
     const statusBadge: Record<string, string> = {
         Present: 'badge-success',
         Late: 'badge-warning',
@@ -50,18 +32,14 @@ const MyAttendance = () => {
 
     const handleTimeIn = () => {
         const timeStr = currentTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-        const newForm = { ...attendanceForm, timeIn: timeStr };
-        setAttendanceForm(newForm);
+        setAttendanceForm({ ...attendanceForm, timeIn: timeStr });
         setPunchedIn(true);
-        localStorage.setItem('active_shift', JSON.stringify(newForm));
     };
 
     const handleTimeOut = () => {
         const timeStr = currentTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-        const newForm = { ...attendanceForm, timeOut: timeStr };
-        setAttendanceForm(newForm);
+        setAttendanceForm({ ...attendanceForm, timeOut: timeStr });
         setPunchedOut(true);
-        localStorage.setItem('active_shift', JSON.stringify(newForm));
     };
 
     const handleSubmitLog = () => {
@@ -80,32 +58,20 @@ const MyAttendance = () => {
             remarks: attendanceForm.remarks
         };
 
-        const updatedLogs = [newLog, ...myAttendance];
-        setMyAttendance(updatedLogs);
-        localStorage.setItem('attendance_logs', JSON.stringify(updatedLogs));
-
-        // Trigger notification for TopBar and Admin
-        localStorage.setItem('attendance_notification', JSON.stringify({
-            id: Date.now(),
-            title: 'Attendance Log Submitted',
-            message: `Employee User recorded ${newLog.timeIn} - ${newLog.timeOut}`,
-            time: 'Just now',
-            type: 'attendance'
-        }));
+        // Adds the new log to our mock state
+        setMyAttendance([newLog, ...myAttendance]);
 
         alert('Attendance log submitted successfully!');
         
-        // Clear the active shift from state and localStorage after submitting
-        localStorage.removeItem('active_shift');
+        // Reset form to clear the active shift
         setAttendanceForm({ timeIn: '', timeOut: '', overtime: '0', remarks: '' });
         setPunchedIn(false);
         setPunchedOut(false);
     };
 
-    // NEW: Function to clear local storage logs
+    // Clears logs locally in state
     const handleClearLogs = () => {
-        if (window.confirm('Are you sure you want to delete all saved attendance logs?')) {
-            localStorage.removeItem('attendance_logs');
+        if (window.confirm('Are you sure you want to clear the logs from this session?')) {
             setMyAttendance([]);
         }
     };
@@ -214,7 +180,6 @@ const MyAttendance = () => {
                 <div className="p-4 border-b border-gray-50 bg-gray-100/30 flex justify-between items-center">
                     <h3 className="text-sm font-bold text-gray-800">Recent Logs</h3>
                     
-                    {/* NEW: Clear Logs Button */}
                     {myAttendance.length > 0 && (
                         <button 
                             onClick={handleClearLogs}
