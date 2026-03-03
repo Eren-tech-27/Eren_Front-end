@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { CheckCircle, AlertTriangle, XCircle, Clock, Upload, X, Plus, Check, Edit, Trash2, Search } from 'lucide-react';
 
 type Tab = 'dtr' | 'overtime' | 'setup';
@@ -36,85 +36,20 @@ const AttendanceTable = () => {
         { label: 'Total Hours', value: '1,760', icon: Clock, gradient: 'linear-gradient(135deg, #6366f1, #818cf8)' },
     ];
 
-    // 1. DTR Records: Seeds base records to local storage to act as a database
-    const [dtrRecords, setDtrRecords] = useState(() => {
-        // Handle admin's base database
-        let base = localStorage.getItem('admin_base_dtr');
-        if (!base) {
-            const initialBase = [
-                { id: 'base-1', isLocal: false, empId: 'EMP-001', name: 'Dela Cruz, Juan', timeIn: '07:55 AM', timeOut: '05:01 PM', status: 'Present', late: '-', overtime: '0:01', remarks: '-' },
-                { id: 'base-2', isLocal: false, empId: 'EMP-002', name: 'Santos, Maria', timeIn: '08:15 AM', timeOut: '05:30 PM', status: 'Late', late: '15 min', overtime: '0:30', remarks: 'Traffic along EDSA' },
-                { id: 'base-3', isLocal: false, empId: 'EMP-003', name: 'Reyes, Jose', timeIn: '-', timeOut: '-', status: 'Absent', late: '-', overtime: '-', remarks: 'Sick leave' },
-                { id: 'base-4', isLocal: false, empId: 'EMP-004', name: 'Garcia, Ana', timeIn: '07:45 AM', timeOut: '06:00 PM', status: 'Present', late: '-', overtime: '1:00', remarks: '-' },
-                { id: 'base-5', isLocal: false, empId: 'EMP-005', name: 'Bautista, Pedro', timeIn: '08:05 AM', timeOut: '05:00 PM', status: 'Late', late: '5 min', overtime: '-', remarks: '-' },
-                { id: 'base-6', isLocal: false, empId: 'EMP-006', name: 'Fernandez, Rosa', timeIn: '07:50 AM', timeOut: '05:15 PM', status: 'Present', late: '-', overtime: '0:15', remarks: '-' },
-            ];
-            localStorage.setItem('admin_base_dtr', JSON.stringify(initialBase));
-            base = JSON.stringify(initialBase);
-        }
-        
-        const adminBaseRecords = JSON.parse(base);
-
-        // Handle logs coming from Employee Self Service
-        const userLogsStr = localStorage.getItem('attendance_logs');
-        const userLogs = userLogsStr ? JSON.parse(userLogsStr) : [];
-        const mappedUserLogs = userLogs.map((l: any) => ({
-            id: l.id,
-            isLocal: true,
-            empId: 'EMP-USER',
-            name: 'Employee User',
-            timeIn: l.timeIn,
-            timeOut: l.timeOut,
-            status: l.status,
-            late: '-',
-            overtime: '0:00',
-            remarks: l.remarks || '-' 
-        }));
-
-        return [...mappedUserLogs, ...adminBaseRecords];
-    });
+    // 1. DTR Records: State with mock data
+    const [dtrRecords, setDtrRecords] = useState([
+        { id: 'base-1', isLocal: false, empId: 'EMP-001', name: 'Dela Cruz, Juan', timeIn: '07:55 AM', timeOut: '05:01 PM', status: 'Present', late: '-', overtime: '0:01', remarks: '-' },
+        { id: 'base-2', isLocal: false, empId: 'EMP-002', name: 'Santos, Maria', timeIn: '08:15 AM', timeOut: '05:30 PM', status: 'Late', late: '15 min', overtime: '0:30', remarks: 'Traffic along EDSA' },
+        { id: 'base-3', isLocal: false, empId: 'EMP-003', name: 'Reyes, Jose', timeIn: '-', timeOut: '-', status: 'Absent', late: '-', overtime: '-', remarks: 'Sick leave' },
+        { id: 'base-4', isLocal: false, empId: 'EMP-004', name: 'Garcia, Ana', timeIn: '07:45 AM', timeOut: '06:00 PM', status: 'Present', late: '-', overtime: '1:00', remarks: '-' },
+        { id: 'base-5', isLocal: false, empId: 'EMP-005', name: 'Bautista, Pedro', timeIn: '08:05 AM', timeOut: '05:00 PM', status: 'Late', late: '5 min', overtime: '-', remarks: '-' },
+        { id: 'base-6', isLocal: false, empId: 'EMP-006', name: 'Fernandez, Rosa', timeIn: '07:50 AM', timeOut: '05:15 PM', status: 'Present', late: '-', overtime: '0:15', remarks: '-' },
+    ]);
 
     const uniqueEmployees = Array.from(new Set(dtrRecords.map(r => r.name))).sort();
     const filteredEmployees = uniqueEmployees.filter(emp => 
         emp.toLowerCase().includes(searchTerm.toLowerCase())
     );
-
-    useEffect(() => {
-        const handleStorageChange = () => {
-            // Update base records if they were deleted/modified
-            const baseStr = localStorage.getItem('admin_base_dtr');
-            const baseRecords = baseStr ? JSON.parse(baseStr) : [];
-
-            // Update user logs
-            const saved = localStorage.getItem('attendance_logs');
-            if (saved) {
-                const userLogs = JSON.parse(saved);
-                const mappedUserLogs = userLogs.map((l: any) => ({
-                    id: l.id,
-                    isLocal: true,
-                    empId: 'EMP-USER',
-                    name: 'Employee User',
-                    timeIn: l.timeIn,
-                    timeOut: l.timeOut,
-                    status: l.status,
-                    late: '-',
-                    overtime: '0:00',
-                    remarks: l.remarks || '-' 
-                }));
-                setDtrRecords([...mappedUserLogs, ...baseRecords]);
-            } else {
-                setDtrRecords([...baseRecords]);
-            }
-        };
-
-        window.addEventListener('storage', handleStorageChange);
-        const checkInterval = setInterval(handleStorageChange, 2000);
-
-        return () => {
-            window.removeEventListener('storage', handleStorageChange);
-            clearInterval(checkInterval);
-        };
-    }, []);
 
     const handleEditRecordClick = (record: any) => {
         setEditRecordForm({ ...record });
@@ -123,69 +58,21 @@ const AttendanceTable = () => {
 
     const handleSaveRecordEdit = () => {
         setDtrRecords(prev => prev.map(r => r.id === editRecordForm.id ? editRecordForm : r));
-
-        if (editRecordForm.isLocal) {
-            const saved = localStorage.getItem('attendance_logs');
-            if (saved) {
-                let logs = JSON.parse(saved);
-                logs = logs.map((l: any) => 
-                    l.id === editRecordForm.id 
-                    ? { ...l, timeIn: editRecordForm.timeIn, timeOut: editRecordForm.timeOut, status: editRecordForm.status, remarks: editRecordForm.remarks } 
-                    : l
-                );
-                localStorage.setItem('attendance_logs', JSON.stringify(logs));
-            }
-        } else {
-            const saved = localStorage.getItem('admin_base_dtr');
-            if (saved) {
-                let logs = JSON.parse(saved);
-                logs = logs.map((l: any) => 
-                    l.id === editRecordForm.id 
-                    ? { ...l, timeIn: editRecordForm.timeIn, timeOut: editRecordForm.timeOut, status: editRecordForm.status, remarks: editRecordForm.remarks } 
-                    : l
-                );
-                localStorage.setItem('admin_base_dtr', JSON.stringify(logs));
-            }
-        }
         setShowEditRecordModal(false);
     };
 
     const handleDeleteRecord = (record: any) => {
         if (!window.confirm(`Are you sure you want to delete the attendance record for ${record.name}?`)) return;
-
         setDtrRecords(prev => prev.filter(r => r.id !== record.id));
-
-        if (record.isLocal) {
-            const saved = localStorage.getItem('attendance_logs');
-            if (saved) {
-                let logs = JSON.parse(saved);
-                logs = logs.filter((l: any) => l.id !== record.id);
-                localStorage.setItem('attendance_logs', JSON.stringify(logs));
-            }
-        } else {
-            const saved = localStorage.getItem('admin_base_dtr');
-            if (saved) {
-                let logs = JSON.parse(saved);
-                logs = logs.filter((l: any) => l.id !== record.id);
-                localStorage.setItem('admin_base_dtr', JSON.stringify(logs));
-            }
-        }
     };
 
-    // 2. Overtime Requests: Seed data into LocalStorage as a database
-    const [overtimeRequests, setOvertimeRequests] = useState(() => {
-        const saved = localStorage.getItem('overtime_requests');
-        if (saved) return JSON.parse(saved);
-        
-        const initial = [
-            { id: 1, date: '2026-02-24', employee: 'Dela Cruz, Juan', duration: '2 hours', reason: 'Project deadline', status: 'Pending' },
-            { id: 2, date: '2026-02-23', employee: 'Garcia, Ana', duration: '3 hours', reason: 'Client deliverable', status: 'Approved' },
-            { id: 3, date: '2026-02-22', employee: 'Santos, Maria', duration: '1.5 hours', reason: 'System maintenance', status: 'Rejected' },
-            { id: 4, date: '2026-02-21', employee: 'Fernandez, Rosa', duration: '2 hours', reason: 'Report compilation', status: 'Pending' },
-        ];
-        localStorage.setItem('overtime_requests', JSON.stringify(initial));
-        return initial;
-    });
+    // 2. Overtime Requests: State with mock data
+    const [overtimeRequests, setOvertimeRequests] = useState([
+        { id: 1, date: '2026-02-24', employee: 'Dela Cruz, Juan', duration: '2 hours', reason: 'Project deadline', status: 'Pending' },
+        { id: 2, date: '2026-02-23', employee: 'Garcia, Ana', duration: '3 hours', reason: 'Client deliverable', status: 'Approved' },
+        { id: 3, date: '2026-02-22', employee: 'Santos, Maria', duration: '1.5 hours', reason: 'System maintenance', status: 'Rejected' },
+        { id: 4, date: '2026-02-21', employee: 'Fernandez, Rosa', duration: '2 hours', reason: 'Report compilation', status: 'Pending' },
+    ]);
 
     const calculateDuration = (start: string, end: string) => {
         if (!start || !end) return '0 hours';
@@ -213,10 +100,7 @@ const AttendanceTable = () => {
             status: 'Pending'
         };
 
-        const updatedRequests = [newRequest, ...overtimeRequests];
-        setOvertimeRequests(updatedRequests);
-        localStorage.setItem('overtime_requests', JSON.stringify(updatedRequests));
-
+        setOvertimeRequests([newRequest, ...overtimeRequests]);
         setShowOvertimeModal(false);
         setSelectedEmployee(null);
         setSearchTerm('');
@@ -225,37 +109,25 @@ const AttendanceTable = () => {
 
     const handleOvertimeAction = (id: number, newStatus: string) => {
         if (window.confirm(`Are you sure you want to mark this request as ${newStatus}?`)) {
-            const updatedRequests = overtimeRequests.map((req: any) => 
+            setOvertimeRequests(overtimeRequests.map((req: any) => 
                 req.id === id ? { ...req, status: newStatus } : req
-            );
-            setOvertimeRequests(updatedRequests);
-            localStorage.setItem('overtime_requests', JSON.stringify(updatedRequests));
+            ));
         }
     };
 
-    // NEW: Function to permanently delete an overtime request
     const handleDeleteOvertime = (id: number) => {
         if (window.confirm(`Are you sure you want to delete this overtime request?`)) {
-            const updatedRequests = overtimeRequests.filter((req: any) => req.id !== id);
-            setOvertimeRequests(updatedRequests);
-            localStorage.setItem('overtime_requests', JSON.stringify(updatedRequests));
+            setOvertimeRequests(overtimeRequests.filter((req: any) => req.id !== id));
         }
     };
 
-    // 3. Shift Setup: Seed data into LocalStorage
-    const [shifts, setShifts] = useState(() => {
-        const saved = localStorage.getItem('dtr_shifts');
-        if (saved) return JSON.parse(saved);
-
-        const initial = [
-            { id: 1, name: 'Regular Shift', timeIn: '08:00 AM', timeOut: '05:00 PM', grace: '15 min', employees: 180, status: 'Active' },
-            { id: 2, name: 'Early Shift', timeIn: '06:00 AM', timeOut: '03:00 PM', grace: '10 min', employees: 35, status: 'Active' },
-            { id: 3, name: 'Night Shift', timeIn: '10:00 PM', timeOut: '07:00 AM', grace: '15 min', employees: 20, status: 'Active' },
-            { id: 4, name: 'Flexi Time', timeIn: '09:00 AM', timeOut: '06:00 PM', grace: '30 min', employees: 10, status: 'Inactive' },
-        ];
-        localStorage.setItem('dtr_shifts', JSON.stringify(initial));
-        return initial;
-    });
+    // 3. Shift Setup: State with mock data
+    const [shifts, setShifts] = useState([
+        { id: 1, name: 'Regular Shift', timeIn: '08:00 AM', timeOut: '05:00 PM', grace: '15 min', employees: 180, status: 'Active' },
+        { id: 2, name: 'Early Shift', timeIn: '06:00 AM', timeOut: '03:00 PM', grace: '10 min', employees: 35, status: 'Active' },
+        { id: 3, name: 'Night Shift', timeIn: '10:00 PM', timeOut: '07:00 AM', grace: '15 min', employees: 20, status: 'Active' },
+        { id: 4, name: 'Flexi Time', timeIn: '09:00 AM', timeOut: '06:00 PM', grace: '30 min', employees: 10, status: 'Inactive' },
+    ]);
 
     const statusBadge: Record<string, string> = {
         Present: 'badge-success',
@@ -294,7 +166,7 @@ const AttendanceTable = () => {
             alert("Please provide a shift name.");
             return;
         }
-        const newShifts = [...shifts, { 
+        const newShift = { 
             id: Date.now(), 
             name: shiftForm.name, 
             timeIn: shiftForm.timeIn, 
@@ -302,38 +174,31 @@ const AttendanceTable = () => {
             grace: shiftForm.grace + ' min', 
             employees: 0, 
             status: shiftForm.status 
-        }];
-        setShifts(newShifts);
-        localStorage.setItem('dtr_shifts', JSON.stringify(newShifts)); // Save to DB
-
+        };
+        
+        setShifts([...shifts, newShift]);
         setShowAddShiftModal(false);
         setShiftForm({ name: '', timeIn: '08:00', timeOut: '17:00', grace: '15', status: 'Active' });
     };
 
     const handleEditShift = () => {
         if (!editingShift) return;
-        const updatedShifts = shifts.map(s => s.id === editingShift.id ? { 
+        setShifts(shifts.map(s => s.id === editingShift.id ? { 
             ...s, 
             name: shiftForm.name, 
             timeIn: shiftForm.timeIn, 
             timeOut: shiftForm.timeOut, 
             grace: shiftForm.grace + ' min', 
             status: shiftForm.status 
-        } : s);
-
-        setShifts(updatedShifts);
-        localStorage.setItem('dtr_shifts', JSON.stringify(updatedShifts)); // Save to DB
+        } : s));
 
         setShowEditShiftModal(false);
         setEditingShift(null);
     };
 
-    // NEW: Function to permanently delete a shift
     const handleDeleteShift = (id: number) => {
         if (window.confirm(`Are you sure you want to delete this shift?`)) {
-            const updatedShifts = shifts.filter(s => s.id !== id);
-            setShifts(updatedShifts);
-            localStorage.setItem('dtr_shifts', JSON.stringify(updatedShifts));
+            setShifts(shifts.filter(s => s.id !== id));
         }
     };
 
@@ -494,7 +359,6 @@ const AttendanceTable = () => {
                                                                 </button>
                                                             </>
                                                         )}
-                                                        {/* Delete button is always available to clean up history */}
                                                         <button 
                                                             onClick={() => handleDeleteOvertime(r.id)} 
                                                             className="btn-ghost btn-icon text-rose-500 hover:bg-rose-50" 
