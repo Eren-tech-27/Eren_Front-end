@@ -23,6 +23,7 @@ import GovernmentCompliance from './pages/compliance/GovernmentCompliance';
 // Employee Self-Service
 import EmployeeSelfService from './pages/self-service/EmployeeSelfService';
 import MyAttendance from './pages/self-service/MyAttendance';
+import MyLeave from './pages/self-service/MyLeave';
 
 // Asset Management
 import AssetManagement from './pages/assets/AssetManagement';
@@ -62,6 +63,7 @@ function AppRoutes() {
         <Route path="personal-records" element={<AdminOnly><EmployeeList /></AdminOnly>} />
         <Route path="employee/:id" element={<AdminOnly><EmployeeProfile /></AdminOnly>} />
         <Route path="attendance" element={<AdminOnly><AttendanceTable /></AdminOnly>} />
+        <Route path="leave" element={<AdminOnly><LeaveManagement /></AdminOnly>} /> {/* <-- MOVED: Now restricted to Admins only */}
         <Route path="payroll" element={<AdminOnly><Payroll /></AdminOnly>} />
         <Route path="assets" element={<AdminOnly><AssetManagement /></AdminOnly>} />
         <Route path="clearance" element={<AdminOnly><ClearanceList /></AdminOnly>} />
@@ -71,8 +73,10 @@ function AppRoutes() {
 
         {/* Shared pages (both user and admin) */}
         <Route path="compliance" element={<GovernmentCompliance />} />
-        <Route path="leave" element={<LeaveManagement />} />
+        
+        {/* Employee Self-Service Pages */}
         <Route path="my-attendance" element={<MyAttendance />} />
+        <Route path="my-leave" element={<MyLeave />} /> {/* <-- ADDED: Route for Employee Leave */}
         <Route path="self-service" element={<EmployeeSelfService />} />
       </Route>
 

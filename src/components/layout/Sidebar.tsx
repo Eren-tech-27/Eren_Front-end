@@ -30,11 +30,11 @@ const Sidebar = () => {
         { icon: Shield, label: 'Government Compliance', path: '/dashboard/compliance' },
     ];
 
-    // User only sees Self-Service, Leave, and Government Compliance
+    // User only sees Self-Service, Attendance Log, Leave Management, and Government Compliance
     const userNav = [
         { icon: UserCircle, label: 'Self-Service', path: '/dashboard/self-service' },
-        { icon: Clock, label: 'Attendance Log', path: '/dashboard/my-attendance' },
-        { icon: FileText, label: 'Leave Management', path: '/dashboard/leave' },
+        { icon: Clock, label: 'My Attendance', path: '/dashboard/my-attendance' },
+        { icon: FileText, label: 'My Leave', path: '/dashboard/my-leave' },
         { icon: Shield, label: 'Government Compliance', path: '/dashboard/compliance' },
     ];
 
