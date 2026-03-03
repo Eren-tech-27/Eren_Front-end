@@ -1,39 +1,46 @@
 import { useState, useEffect } from 'react';
-import { Clock, Send, Play, Square } from 'lucide-react';
+import { Clock, Send, Play, Square, Trash2 } from 'lucide-react';
 
 const MyAttendance = () => {
     const [currentTime, setCurrentTime] = useState(new Date());
-    const [punchedIn, setPunchedIn] = useState(false);
-    const [punchedOut, setPunchedOut] = useState(false);
-    const [attendanceForm, setAttendanceForm] = useState({
-        timeIn: '',
-        timeOut: '',
-        overtime: '0',
-        remarks: ''
+    
+    // Initialize state from localStorage to persist across page loads/logouts
+    const [attendanceForm, setAttendanceForm] = useState(() => {
+        const savedShift = localStorage.getItem('active_shift');
+        if (savedShift) return JSON.parse(savedShift);
+        return { timeIn: '', timeOut: '', overtime: '0', remarks: '' };
     });
 
-    useEffect(() => {
-        const timer = setInterval(() => {
-            setCurrentTime(new Date());
-        }, 1000);
-        return () => clearInterval(timer);
-    }, []);
+    const [punchedIn, setPunchedIn] = useState(() => {
+        const savedShift = localStorage.getItem('active_shift');
+        return savedShift ? JSON.parse(savedShift).timeIn !== '' : false;
+    });
 
+    const [punchedOut, setPunchedOut] = useState(() => {
+        const savedShift = localStorage.getItem('active_shift');
+        return savedShift ? JSON.parse(savedShift).timeOut !== '' : false;
+    });
+
+    // Initializes with saved browser logs, or an empty array []
     const [myAttendance, setMyAttendance] = useState(() => {
         const saved = localStorage.getItem('attendance_logs');
-        return saved ? JSON.parse(saved) : [
-            { id: 1, date: '2026-02-25', timeIn: '07:55 AM', timeOut: '05:01 PM', status: 'Present', hours: '8.1' },
-            { id: 2, date: '2026-02-24', timeIn: '08:10 AM', timeOut: '05:30 PM', status: 'Late', hours: '8.3' },
-            { id: 3, date: '2026-02-23', timeIn: '07:45 AM', timeOut: '06:00 PM', status: 'Present', hours: '9.25' },
-        ];
+        return saved ? JSON.parse(saved) : []; 
     });
 
+    // Live Clock Timer
     useEffect(() => {
         const timer = setInterval(() => {
             setCurrentTime(new Date());
         }, 1000);
         return () => clearInterval(timer);
     }, []);
+
+    // Automatically save the active shift to localStorage whenever the form updates
+    useEffect(() => {
+        if (punchedIn) {
+            localStorage.setItem('active_shift', JSON.stringify(attendanceForm));
+        }
+    }, [attendanceForm, punchedIn]);
 
     const statusBadge: Record<string, string> = {
         Present: 'badge-success',
@@ -43,14 +50,18 @@ const MyAttendance = () => {
 
     const handleTimeIn = () => {
         const timeStr = currentTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-        setAttendanceForm(prev => ({ ...prev, timeIn: timeStr }));
+        const newForm = { ...attendanceForm, timeIn: timeStr };
+        setAttendanceForm(newForm);
         setPunchedIn(true);
+        localStorage.setItem('active_shift', JSON.stringify(newForm));
     };
 
     const handleTimeOut = () => {
         const timeStr = currentTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-        setAttendanceForm(prev => ({ ...prev, timeOut: timeStr }));
+        const newForm = { ...attendanceForm, timeOut: timeStr };
+        setAttendanceForm(newForm);
         setPunchedOut(true);
+        localStorage.setItem('active_shift', JSON.stringify(newForm));
     };
 
     const handleSubmitLog = () => {
@@ -83,9 +94,20 @@ const MyAttendance = () => {
         }));
 
         alert('Attendance log submitted successfully!');
+        
+        // Clear the active shift from state and localStorage after submitting
+        localStorage.removeItem('active_shift');
         setAttendanceForm({ timeIn: '', timeOut: '', overtime: '0', remarks: '' });
         setPunchedIn(false);
         setPunchedOut(false);
+    };
+
+    // NEW: Function to clear local storage logs
+    const handleClearLogs = () => {
+        if (window.confirm('Are you sure you want to delete all saved attendance logs?')) {
+            localStorage.removeItem('attendance_logs');
+            setMyAttendance([]);
+        }
     };
 
     return (
@@ -189,8 +211,19 @@ const MyAttendance = () => {
             </div>
 
             <div className="pro-card overflow-hidden animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
-                <div className="p-4 border-b border-gray-50 bg-gray-100/30">
+                <div className="p-4 border-b border-gray-50 bg-gray-100/30 flex justify-between items-center">
                     <h3 className="text-sm font-bold text-gray-800">Recent Logs</h3>
+                    
+                    {/* NEW: Clear Logs Button */}
+                    {myAttendance.length > 0 && (
+                        <button 
+                            onClick={handleClearLogs}
+                            className="flex items-center gap-1 text-xs font-semibold text-rose-500 hover:text-rose-600 transition-colors bg-rose-50 px-3 py-1.5 rounded-lg"
+                        >
+                            <Trash2 className="w-3.5 h-3.5" />
+                            Clear Logs
+                        </button>
+                    )}
                 </div>
                 <div className="overflow-x-auto">
                     <table className="pro-table">
@@ -200,15 +233,23 @@ const MyAttendance = () => {
                             </tr>
                         </thead>
                         <tbody>
-                            {myAttendance.map((r, i) => (
-                                <tr key={i}>
-                                    <td>{r.date}</td>
-                                    <td className="font-mono text-xs font-bold text-emerald-600">{r.timeIn}</td>
-                                    <td className="font-mono text-xs font-bold text-rose-500">{r.timeOut}</td>
-                                    <td><span className={`badge ${statusBadge[r.status]}`}><span className="badge-dot" />{r.status}</span></td>
-                                    <td className="font-bold text-gray-700">{r.hours}h</td>
+                            {myAttendance.length > 0 ? (
+                                myAttendance.map((r: any, i: number) => (
+                                    <tr key={i}>
+                                        <td>{r.date}</td>
+                                        <td className="font-mono text-xs font-bold text-emerald-600">{r.timeIn}</td>
+                                        <td className="font-mono text-xs font-bold text-rose-500">{r.timeOut}</td>
+                                        <td><span className={`badge ${statusBadge[r.status]}`}><span className="badge-dot" />{r.status}</span></td>
+                                        <td className="font-bold text-gray-700">{r.hours}h</td>
+                                    </tr>
+                                ))
+                            ) : (
+                                <tr>
+                                    <td colSpan={5} className="text-center py-8 text-sm text-gray-400 italic">
+                                        No recent attendance logs found.
+                                    </td>
                                 </tr>
-                            ))}
+                            )}
                         </tbody>
                     </table>
                 </div>

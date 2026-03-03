@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { CheckCircle, AlertTriangle, XCircle, Clock, Upload, X, Plus, Check, Edit, Eye, Search } from 'lucide-react';
+import { CheckCircle, AlertTriangle, XCircle, Clock, Upload, X, Plus, Check, Edit, Trash2, Search } from 'lucide-react';
 
 type Tab = 'dtr' | 'overtime' | 'setup';
 
@@ -12,9 +12,16 @@ const AttendanceTable = () => {
     const [editingShift, setEditingShift] = useState<any>(null);
     const [shiftForm, setShiftForm] = useState({ name: '', timeIn: '08:00', timeOut: '17:00', grace: '15', status: 'Active' });
     
-    // New states for employee selection in Overtime Modal
+    // Search states for Employee Selection
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedEmployee, setSelectedEmployee] = useState<string | null>(null);
+
+    // Form state for Request Overtime Modal
+    const [overtimeForm, setOvertimeForm] = useState({ date: '', startTime: '', endTime: '', reason: '' });
+
+    // States for editing Attendance Records
+    const [showEditRecordModal, setShowEditRecordModal] = useState(false);
+    const [editRecordForm, setEditRecordForm] = useState<any>(null);
 
     const tabs = [
         { id: 'dtr' as Tab, label: 'Daily Time Record', icon: Clock },
@@ -29,30 +36,44 @@ const AttendanceTable = () => {
         { label: 'Total Hours', value: '1,760', icon: Clock, gradient: 'linear-gradient(135deg, #6366f1, #818cf8)' },
     ];
 
+    // 1. DTR Records: Seeds base records to local storage to act as a database
     const [dtrRecords, setDtrRecords] = useState(() => {
-        const saved = localStorage.getItem('attendance_logs');
-        const userLogs = saved ? JSON.parse(saved) : [];
-        const baseRecords = [
-            { empId: 'EMP-001', name: 'Dela Cruz, Juan', timeIn: '07:55 AM', timeOut: '05:01 PM', status: 'Present', late: '-', overtime: '0:01' },
-            { empId: 'EMP-002', name: 'Santos, Maria', timeIn: '08:15 AM', timeOut: '05:30 PM', status: 'Late', late: '15 min', overtime: '0:30' },
-            { empId: 'EMP-003', name: 'Reyes, Jose', timeIn: '-', timeOut: '-', status: 'Absent', late: '-', overtime: '-' },
-            { empId: 'EMP-004', name: 'Garcia, Ana', timeIn: '07:45 AM', timeOut: '06:00 PM', status: 'Present', late: '-', overtime: '1:00' },
-            { empId: 'EMP-005', name: 'Bautista, Pedro', timeIn: '08:05 AM', timeOut: '05:00 PM', status: 'Late', late: '5 min', overtime: '-' },
-            { empId: 'EMP-006', name: 'Fernandez, Rosa', timeIn: '07:50 AM', timeOut: '05:15 PM', status: 'Present', late: '-', overtime: '0:15' },
-        ];
+        // Handle admin's base database
+        let base = localStorage.getItem('admin_base_dtr');
+        if (!base) {
+            const initialBase = [
+                { id: 'base-1', isLocal: false, empId: 'EMP-001', name: 'Dela Cruz, Juan', timeIn: '07:55 AM', timeOut: '05:01 PM', status: 'Present', late: '-', overtime: '0:01', remarks: '-' },
+                { id: 'base-2', isLocal: false, empId: 'EMP-002', name: 'Santos, Maria', timeIn: '08:15 AM', timeOut: '05:30 PM', status: 'Late', late: '15 min', overtime: '0:30', remarks: 'Traffic along EDSA' },
+                { id: 'base-3', isLocal: false, empId: 'EMP-003', name: 'Reyes, Jose', timeIn: '-', timeOut: '-', status: 'Absent', late: '-', overtime: '-', remarks: 'Sick leave' },
+                { id: 'base-4', isLocal: false, empId: 'EMP-004', name: 'Garcia, Ana', timeIn: '07:45 AM', timeOut: '06:00 PM', status: 'Present', late: '-', overtime: '1:00', remarks: '-' },
+                { id: 'base-5', isLocal: false, empId: 'EMP-005', name: 'Bautista, Pedro', timeIn: '08:05 AM', timeOut: '05:00 PM', status: 'Late', late: '5 min', overtime: '-', remarks: '-' },
+                { id: 'base-6', isLocal: false, empId: 'EMP-006', name: 'Fernandez, Rosa', timeIn: '07:50 AM', timeOut: '05:15 PM', status: 'Present', late: '-', overtime: '0:15', remarks: '-' },
+            ];
+            localStorage.setItem('admin_base_dtr', JSON.stringify(initialBase));
+            base = JSON.stringify(initialBase);
+        }
+        
+        const adminBaseRecords = JSON.parse(base);
+
+        // Handle logs coming from Employee Self Service
+        const userLogsStr = localStorage.getItem('attendance_logs');
+        const userLogs = userLogsStr ? JSON.parse(userLogsStr) : [];
         const mappedUserLogs = userLogs.map((l: any) => ({
+            id: l.id,
+            isLocal: true,
             empId: 'EMP-USER',
             name: 'Employee User',
             timeIn: l.timeIn,
             timeOut: l.timeOut,
             status: l.status,
             late: '-',
-            overtime: '0:00'
+            overtime: '0:00',
+            remarks: l.remarks || '-' 
         }));
-        return [...mappedUserLogs, ...baseRecords];
+
+        return [...mappedUserLogs, ...adminBaseRecords];
     });
 
-    // Derived unique list of employees for the dropdown/search
     const uniqueEmployees = Array.from(new Set(dtrRecords.map(r => r.name))).sort();
     const filteredEmployees = uniqueEmployees.filter(emp => 
         emp.toLowerCase().includes(searchTerm.toLowerCase())
@@ -60,22 +81,29 @@ const AttendanceTable = () => {
 
     useEffect(() => {
         const handleStorageChange = () => {
+            // Update base records if they were deleted/modified
+            const baseStr = localStorage.getItem('admin_base_dtr');
+            const baseRecords = baseStr ? JSON.parse(baseStr) : [];
+
+            // Update user logs
             const saved = localStorage.getItem('attendance_logs');
             if (saved) {
                 const userLogs = JSON.parse(saved);
                 const mappedUserLogs = userLogs.map((l: any) => ({
+                    id: l.id,
+                    isLocal: true,
                     empId: 'EMP-USER',
                     name: 'Employee User',
                     timeIn: l.timeIn,
                     timeOut: l.timeOut,
                     status: l.status,
                     late: '-',
-                    overtime: '0:00'
+                    overtime: '0:00',
+                    remarks: l.remarks || '-' 
                 }));
-                setDtrRecords(prev => {
-                    const baseRecords = prev.filter(r => r.empId !== 'EMP-USER');
-                    return [...mappedUserLogs, ...baseRecords];
-                });
+                setDtrRecords([...mappedUserLogs, ...baseRecords]);
+            } else {
+                setDtrRecords([...baseRecords]);
             }
         };
 
@@ -88,19 +116,146 @@ const AttendanceTable = () => {
         };
     }, []);
 
-    const overtimeRequests = [
-        { date: '2026-02-24', employee: 'Dela Cruz, Juan', duration: '2 hours', reason: 'Project deadline', status: 'Pending' },
-        { date: '2026-02-23', employee: 'Garcia, Ana', duration: '3 hours', reason: 'Client deliverable', status: 'Approved' },
-        { date: '2026-02-22', employee: 'Santos, Maria', duration: '1.5 hours', reason: 'System maintenance', status: 'Rejected' },
-        { date: '2026-02-21', employee: 'Fernandez, Rosa', duration: '2 hours', reason: 'Report compilation', status: 'Pending' },
-    ];
+    const handleEditRecordClick = (record: any) => {
+        setEditRecordForm({ ...record });
+        setShowEditRecordModal(true);
+    };
 
-    const [shifts, setShifts] = useState([
-        { id: 1, name: 'Regular Shift', timeIn: '08:00 AM', timeOut: '05:00 PM', grace: '15 min', employees: 180, status: 'Active' },
-        { id: 2, name: 'Early Shift', timeIn: '06:00 AM', timeOut: '03:00 PM', grace: '10 min', employees: 35, status: 'Active' },
-        { id: 3, name: 'Night Shift', timeIn: '10:00 PM', timeOut: '07:00 AM', grace: '15 min', employees: 20, status: 'Active' },
-        { id: 4, name: 'Flexi Time', timeIn: '09:00 AM', timeOut: '06:00 PM', grace: '30 min', employees: 10, status: 'Inactive' },
-    ]);
+    const handleSaveRecordEdit = () => {
+        setDtrRecords(prev => prev.map(r => r.id === editRecordForm.id ? editRecordForm : r));
+
+        if (editRecordForm.isLocal) {
+            const saved = localStorage.getItem('attendance_logs');
+            if (saved) {
+                let logs = JSON.parse(saved);
+                logs = logs.map((l: any) => 
+                    l.id === editRecordForm.id 
+                    ? { ...l, timeIn: editRecordForm.timeIn, timeOut: editRecordForm.timeOut, status: editRecordForm.status, remarks: editRecordForm.remarks } 
+                    : l
+                );
+                localStorage.setItem('attendance_logs', JSON.stringify(logs));
+            }
+        } else {
+            const saved = localStorage.getItem('admin_base_dtr');
+            if (saved) {
+                let logs = JSON.parse(saved);
+                logs = logs.map((l: any) => 
+                    l.id === editRecordForm.id 
+                    ? { ...l, timeIn: editRecordForm.timeIn, timeOut: editRecordForm.timeOut, status: editRecordForm.status, remarks: editRecordForm.remarks } 
+                    : l
+                );
+                localStorage.setItem('admin_base_dtr', JSON.stringify(logs));
+            }
+        }
+        setShowEditRecordModal(false);
+    };
+
+    const handleDeleteRecord = (record: any) => {
+        if (!window.confirm(`Are you sure you want to delete the attendance record for ${record.name}?`)) return;
+
+        setDtrRecords(prev => prev.filter(r => r.id !== record.id));
+
+        if (record.isLocal) {
+            const saved = localStorage.getItem('attendance_logs');
+            if (saved) {
+                let logs = JSON.parse(saved);
+                logs = logs.filter((l: any) => l.id !== record.id);
+                localStorage.setItem('attendance_logs', JSON.stringify(logs));
+            }
+        } else {
+            const saved = localStorage.getItem('admin_base_dtr');
+            if (saved) {
+                let logs = JSON.parse(saved);
+                logs = logs.filter((l: any) => l.id !== record.id);
+                localStorage.setItem('admin_base_dtr', JSON.stringify(logs));
+            }
+        }
+    };
+
+    // 2. Overtime Requests: Seed data into LocalStorage as a database
+    const [overtimeRequests, setOvertimeRequests] = useState(() => {
+        const saved = localStorage.getItem('overtime_requests');
+        if (saved) return JSON.parse(saved);
+        
+        const initial = [
+            { id: 1, date: '2026-02-24', employee: 'Dela Cruz, Juan', duration: '2 hours', reason: 'Project deadline', status: 'Pending' },
+            { id: 2, date: '2026-02-23', employee: 'Garcia, Ana', duration: '3 hours', reason: 'Client deliverable', status: 'Approved' },
+            { id: 3, date: '2026-02-22', employee: 'Santos, Maria', duration: '1.5 hours', reason: 'System maintenance', status: 'Rejected' },
+            { id: 4, date: '2026-02-21', employee: 'Fernandez, Rosa', duration: '2 hours', reason: 'Report compilation', status: 'Pending' },
+        ];
+        localStorage.setItem('overtime_requests', JSON.stringify(initial));
+        return initial;
+    });
+
+    const calculateDuration = (start: string, end: string) => {
+        if (!start || !end) return '0 hours';
+        const [sh, sm] = start.split(':').map(Number);
+        const [eh, em] = end.split(':').map(Number);
+        let diffMinutes = (eh * 60 + em) - (sh * 60 + sm);
+        if (diffMinutes < 0) diffMinutes += 24 * 60; 
+        
+        const hours = (diffMinutes / 60).toFixed(1);
+        return `${hours.replace('.0', '')} hours`;
+    };
+
+    const handleSubmitOvertimeRequest = () => {
+        if (!selectedEmployee || !overtimeForm.date || !overtimeForm.startTime || !overtimeForm.endTime || !overtimeForm.reason) {
+            alert('Please fill out all fields and select an employee.');
+            return;
+        }
+
+        const newRequest = {
+            id: Date.now(),
+            date: overtimeForm.date,
+            employee: selectedEmployee,
+            duration: calculateDuration(overtimeForm.startTime, overtimeForm.endTime),
+            reason: overtimeForm.reason,
+            status: 'Pending'
+        };
+
+        const updatedRequests = [newRequest, ...overtimeRequests];
+        setOvertimeRequests(updatedRequests);
+        localStorage.setItem('overtime_requests', JSON.stringify(updatedRequests));
+
+        setShowOvertimeModal(false);
+        setSelectedEmployee(null);
+        setSearchTerm('');
+        setOvertimeForm({ date: '', startTime: '', endTime: '', reason: '' });
+    };
+
+    const handleOvertimeAction = (id: number, newStatus: string) => {
+        if (window.confirm(`Are you sure you want to mark this request as ${newStatus}?`)) {
+            const updatedRequests = overtimeRequests.map((req: any) => 
+                req.id === id ? { ...req, status: newStatus } : req
+            );
+            setOvertimeRequests(updatedRequests);
+            localStorage.setItem('overtime_requests', JSON.stringify(updatedRequests));
+        }
+    };
+
+    // NEW: Function to permanently delete an overtime request
+    const handleDeleteOvertime = (id: number) => {
+        if (window.confirm(`Are you sure you want to delete this overtime request?`)) {
+            const updatedRequests = overtimeRequests.filter((req: any) => req.id !== id);
+            setOvertimeRequests(updatedRequests);
+            localStorage.setItem('overtime_requests', JSON.stringify(updatedRequests));
+        }
+    };
+
+    // 3. Shift Setup: Seed data into LocalStorage
+    const [shifts, setShifts] = useState(() => {
+        const saved = localStorage.getItem('dtr_shifts');
+        if (saved) return JSON.parse(saved);
+
+        const initial = [
+            { id: 1, name: 'Regular Shift', timeIn: '08:00 AM', timeOut: '05:00 PM', grace: '15 min', employees: 180, status: 'Active' },
+            { id: 2, name: 'Early Shift', timeIn: '06:00 AM', timeOut: '03:00 PM', grace: '10 min', employees: 35, status: 'Active' },
+            { id: 3, name: 'Night Shift', timeIn: '10:00 PM', timeOut: '07:00 AM', grace: '15 min', employees: 20, status: 'Active' },
+            { id: 4, name: 'Flexi Time', timeIn: '09:00 AM', timeOut: '06:00 PM', grace: '30 min', employees: 10, status: 'Inactive' },
+        ];
+        localStorage.setItem('dtr_shifts', JSON.stringify(initial));
+        return initial;
+    });
 
     const statusBadge: Record<string, string> = {
         Present: 'badge-success',
@@ -124,66 +279,63 @@ const AttendanceTable = () => {
 
     const openEditShift = (shift: any) => {
         setEditingShift(shift);
-        setShiftForm({ name: shift.name, timeIn: shift.timeIn, timeOut: shift.timeOut, grace: shift.grace.replace(' min', ''), status: shift.status });
+        setShiftForm({ 
+            name: shift.name, 
+            timeIn: shift.timeIn, 
+            timeOut: shift.timeOut, 
+            grace: String(shift.grace).replace(' min', ''), 
+            status: shift.status 
+        });
         setShowEditShiftModal(true);
     };
 
     const handleAddShift = () => {
-        setShifts([...shifts, { id: Date.now(), name: shiftForm.name, timeIn: shiftForm.timeIn, timeOut: shiftForm.timeOut, grace: shiftForm.grace + ' min', employees: 0, status: shiftForm.status }]);
+        if(!shiftForm.name) {
+            alert("Please provide a shift name.");
+            return;
+        }
+        const newShifts = [...shifts, { 
+            id: Date.now(), 
+            name: shiftForm.name, 
+            timeIn: shiftForm.timeIn, 
+            timeOut: shiftForm.timeOut, 
+            grace: shiftForm.grace + ' min', 
+            employees: 0, 
+            status: shiftForm.status 
+        }];
+        setShifts(newShifts);
+        localStorage.setItem('dtr_shifts', JSON.stringify(newShifts)); // Save to DB
+
         setShowAddShiftModal(false);
         setShiftForm({ name: '', timeIn: '08:00', timeOut: '17:00', grace: '15', status: 'Active' });
     };
 
     const handleEditShift = () => {
         if (!editingShift) return;
-        setShifts(shifts.map(s => s.id === editingShift.id ? { ...s, name: shiftForm.name, timeIn: shiftForm.timeIn, timeOut: shiftForm.timeOut, grace: shiftForm.grace + ' min', status: shiftForm.status } : s));
+        const updatedShifts = shifts.map(s => s.id === editingShift.id ? { 
+            ...s, 
+            name: shiftForm.name, 
+            timeIn: shiftForm.timeIn, 
+            timeOut: shiftForm.timeOut, 
+            grace: shiftForm.grace + ' min', 
+            status: shiftForm.status 
+        } : s);
+
+        setShifts(updatedShifts);
+        localStorage.setItem('dtr_shifts', JSON.stringify(updatedShifts)); // Save to DB
+
         setShowEditShiftModal(false);
         setEditingShift(null);
     };
 
-    const ShiftFormModal = ({ title, onSubmit, submitLabel, onClose }: { title: string; onSubmit: () => void; submitLabel: string; onClose: () => void }) => (
-        <div className="pro-modal-overlay">
-            <div className="pro-modal max-w-md" onClick={e => e.stopPropagation()}>
-                <div className="pro-modal-header">
-                    <h3>{title}</h3>
-                    <button onClick={onClose} className="btn-ghost btn-icon"><X className="w-5 h-5 text-gray-400" /></button>
-                </div>
-                <div className="pro-modal-body space-y-4">
-                    <div>
-                        <label className="pro-label">Shift Name</label>
-                        <input type="text" value={shiftForm.name} onChange={e => setShiftForm({ ...shiftForm, name: e.target.value })} className="pro-input" placeholder="e.g. Morning Shift" />
-                    </div>
-                    <div className="grid grid-cols-2 gap-4">
-                        <div>
-                            <label className="pro-label">Time In</label>
-                            <input type="time" value={shiftForm.timeIn} onChange={e => setShiftForm({ ...shiftForm, timeIn: e.target.value })} className="pro-input" />
-                        </div>
-                        <div>
-                            <label className="pro-label">Time Out</label>
-                            <input type="time" value={shiftForm.timeOut} onChange={e => setShiftForm({ ...shiftForm, timeOut: e.target.value })} className="pro-input" />
-                        </div>
-                    </div>
-                    <div className="grid grid-cols-2 gap-4">
-                        <div>
-                            <label className="pro-label">Grace Period (min)</label>
-                            <input type="number" value={shiftForm.grace} onChange={e => setShiftForm({ ...shiftForm, grace: e.target.value })} className="pro-input" />
-                        </div>
-                        <div>
-                            <label className="pro-label">Status</label>
-                            <select value={shiftForm.status} onChange={e => setShiftForm({ ...shiftForm, status: e.target.value })} className="pro-select">
-                                <option>Active</option>
-                                <option>Inactive</option>
-                            </select>
-                        </div>
-                    </div>
-                </div>
-                <div className="pro-modal-footer">
-                    <button onClick={onClose} className="btn btn-secondary">Cancel</button>
-                    <button onClick={onSubmit} className="btn btn-primary">{submitLabel}</button>
-                </div>
-            </div>
-        </div>
-    );
+    // NEW: Function to permanently delete a shift
+    const handleDeleteShift = (id: number) => {
+        if (window.confirm(`Are you sure you want to delete this shift?`)) {
+            const updatedShifts = shifts.filter(s => s.id !== id);
+            setShifts(updatedShifts);
+            localStorage.setItem('dtr_shifts', JSON.stringify(updatedShifts));
+        }
+    };
 
     return (
         <div className="space-y-6">
@@ -257,9 +409,12 @@ const AttendanceTable = () => {
                                                 <td>{r.overtime}</td>
                                                 <td>
                                                     <div className="flex gap-1 justify-center">
-                                                        <button className="btn-ghost btn-icon text-blue-500 hover:bg-blue-50" title="Edit"><Edit className="w-4 h-4" /></button>
-                                                        <button className="btn-ghost btn-icon text-gray-400 hover:bg-gray-100" title="Hide"><Eye className="w-4 h-4" /></button>
-                                                        <button className="btn-ghost btn-icon text-rose-500 hover:bg-rose-50" title="Block"><XCircle className="w-4 h-4" /></button>
+                                                        <button onClick={() => handleEditRecordClick(r)} className="btn-ghost btn-icon text-blue-500 hover:bg-blue-50" title="Edit">
+                                                            <Edit className="w-4 h-4" />
+                                                        </button>
+                                                        <button onClick={() => handleDeleteRecord(r)} className="btn-ghost btn-icon text-rose-500 hover:bg-rose-50" title="Delete">
+                                                            <Trash2 className="w-4 h-4" />
+                                                        </button>
                                                     </div>
                                                 </td>
                                             </tr>
@@ -314,7 +469,7 @@ const AttendanceTable = () => {
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        {overtimeRequests.map((r, i) => (
+                                        {overtimeRequests.map((r: any, i: number) => (
                                             <tr key={i}>
                                                 <td>{r.date}</td>
                                                 <td className="!font-medium !text-gray-800">{r.employee}</td>
@@ -322,12 +477,31 @@ const AttendanceTable = () => {
                                                 <td>{r.reason}</td>
                                                 <td><span className={`badge ${statusBadge[r.status]}`}><span className="badge-dot" />{r.status}</span></td>
                                                 <td>
-                                                    {r.status === 'Pending' && (
-                                                        <div className="flex gap-1">
-                                                            <button className="btn-ghost btn-icon text-emerald-600 hover:bg-emerald-50"><Check className="w-4 h-4" /></button>
-                                                            <button className="btn-ghost btn-icon text-red-500 hover:bg-red-50"><X className="w-4 h-4" /></button>
-                                                        </div>
-                                                    )}
+                                                    <div className="flex gap-1">
+                                                        {r.status === 'Pending' && (
+                                                            <>
+                                                                <button 
+                                                                    onClick={() => handleOvertimeAction(r.id, 'Approved')} 
+                                                                    className="btn-ghost btn-icon text-emerald-600 hover:bg-emerald-50" 
+                                                                    title="Approve">
+                                                                    <Check className="w-4 h-4" />
+                                                                </button>
+                                                                <button 
+                                                                    onClick={() => handleOvertimeAction(r.id, 'Rejected')} 
+                                                                    className="btn-ghost btn-icon text-amber-500 hover:bg-amber-50" 
+                                                                    title="Reject">
+                                                                    <X className="w-4 h-4" />
+                                                                </button>
+                                                            </>
+                                                        )}
+                                                        {/* Delete button is always available to clean up history */}
+                                                        <button 
+                                                            onClick={() => handleDeleteOvertime(r.id)} 
+                                                            className="btn-ghost btn-icon text-rose-500 hover:bg-rose-50" 
+                                                            title="Delete">
+                                                            <Trash2 className="w-4 h-4" />
+                                                        </button>
+                                                    </div>
                                                 </td>
                                             </tr>
                                         ))}
@@ -365,9 +539,14 @@ const AttendanceTable = () => {
                                                 <td>{s.employees}</td>
                                                 <td><span className={`badge ${statusBadge[s.status]}`}><span className="badge-dot" />{s.status}</span></td>
                                                 <td>
-                                                    <button onClick={() => openEditShift(s)} className="btn-ghost btn-icon text-emerald-600 hover:bg-emerald-50">
-                                                        <Edit className="w-4 h-4" />
-                                                    </button>
+                                                    <div className="flex gap-1">
+                                                        <button onClick={() => openEditShift(s)} className="btn-ghost btn-icon text-emerald-600 hover:bg-emerald-50" title="Edit">
+                                                            <Edit className="w-4 h-4" />
+                                                        </button>
+                                                        <button onClick={() => handleDeleteShift(s.id)} className="btn-ghost btn-icon text-rose-500 hover:bg-rose-50" title="Delete">
+                                                            <Trash2 className="w-4 h-4" />
+                                                        </button>
+                                                    </div>
                                                 </td>
                                             </tr>
                                         ))}
@@ -378,6 +557,72 @@ const AttendanceTable = () => {
                     )}
                 </div>
             </div>
+
+            {/* Edit Record Modal */}
+            {showEditRecordModal && editRecordForm && (
+                <div className="pro-modal-overlay">
+                    <div className="pro-modal max-w-md" onClick={e => e.stopPropagation()}>
+                        <div className="pro-modal-header">
+                            <h3>Edit Attendance Record</h3>
+                            <button onClick={() => setShowEditRecordModal(false)} className="btn-ghost btn-icon"><X className="w-5 h-5 text-gray-400" /></button>
+                        </div>
+                        <div className="pro-modal-body space-y-4">
+                            <div>
+                                <label className="pro-label">Employee</label>
+                                <input type="text" value={editRecordForm.name} disabled className="pro-input bg-gray-50 text-gray-500 cursor-not-allowed" />
+                            </div>
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label className="pro-label">Time In</label>
+                                    <input 
+                                        type="text" 
+                                        value={editRecordForm.timeIn} 
+                                        onChange={e => setEditRecordForm({...editRecordForm, timeIn: e.target.value})} 
+                                        className="pro-input" 
+                                        placeholder="e.g. 08:00 AM"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="pro-label">Time Out</label>
+                                    <input 
+                                        type="text" 
+                                        value={editRecordForm.timeOut} 
+                                        onChange={e => setEditRecordForm({...editRecordForm, timeOut: e.target.value})} 
+                                        className="pro-input" 
+                                        placeholder="e.g. 05:00 PM"
+                                    />
+                                </div>
+                            </div>
+                            <div>
+                                <label className="pro-label">Status</label>
+                                <select 
+                                    value={editRecordForm.status} 
+                                    onChange={e => setEditRecordForm({...editRecordForm, status: e.target.value})} 
+                                    className="pro-select"
+                                >
+                                    <option value="Present">Present</option>
+                                    <option value="Late">Late</option>
+                                    <option value="Absent">Absent</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label className="pro-label">Remarks</label>
+                                <textarea 
+                                    value={editRecordForm.remarks === '-' ? '' : editRecordForm.remarks}
+                                    onChange={e => setEditRecordForm({...editRecordForm, remarks: e.target.value})}
+                                    className="pro-input resize-none" 
+                                    rows={3}
+                                    placeholder="Add or edit notes..."
+                                />
+                            </div>
+                        </div>
+                        <div className="pro-modal-footer">
+                            <button onClick={() => setShowEditRecordModal(false)} className="btn btn-secondary">Cancel</button>
+                            <button onClick={handleSaveRecordEdit} className="btn btn-primary">Save Changes</button>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* Upload DTR Modal */}
             {showUploadModal && (
@@ -413,7 +658,7 @@ const AttendanceTable = () => {
                 </div>
             )}
 
-            {/* Request Overtime Modal with Employee Search/Dropdown */}
+            {/* Request Overtime Modal */}
             {showOvertimeModal && (
                 <div className="pro-modal-overlay">
                     <div className="pro-modal max-w-md" onClick={e => e.stopPropagation()}>
@@ -424,7 +669,6 @@ const AttendanceTable = () => {
                             </button>
                         </div>
                         <div className="pro-modal-body space-y-4">
-                            {/* NEW: Employee Selection */}
                             <div>
                                 <label className="pro-label">Select Employee</label>
                                 <div className="relative group">
@@ -438,7 +682,7 @@ const AttendanceTable = () => {
                                         value={searchTerm}
                                         onChange={(e) => {
                                             setSearchTerm(e.target.value);
-                                            setSelectedEmployee(null); // Reset selection when typing
+                                            setSelectedEmployee(null);
                                         }}
                                     />
                                     {searchTerm && !selectedEmployee && (
@@ -474,20 +718,50 @@ const AttendanceTable = () => {
                                 </div>
                             </div>
 
-                            <div><label className="pro-label">Date</label><input type="date" className="pro-input" /></div>
+                            <div>
+                                <label className="pro-label">Date</label>
+                                <input 
+                                    type="date" 
+                                    className="pro-input" 
+                                    value={overtimeForm.date} 
+                                    onChange={(e) => setOvertimeForm({ ...overtimeForm, date: e.target.value })} 
+                                />
+                            </div>
                             <div className="grid grid-cols-2 gap-4">
-                                <div><label className="pro-label">Start Time</label><input type="time" className="pro-input" /></div>
-                                <div><label className="pro-label">End Time</label><input type="time" className="pro-input" /></div>
+                                <div>
+                                    <label className="pro-label">Start Time</label>
+                                    <input 
+                                        type="time" 
+                                        className="pro-input" 
+                                        value={overtimeForm.startTime} 
+                                        onChange={(e) => setOvertimeForm({ ...overtimeForm, startTime: e.target.value })} 
+                                    />
+                                </div>
+                                <div>
+                                    <label className="pro-label">End Time</label>
+                                    <input 
+                                        type="time" 
+                                        className="pro-input" 
+                                        value={overtimeForm.endTime} 
+                                        onChange={(e) => setOvertimeForm({ ...overtimeForm, endTime: e.target.value })} 
+                                    />
+                                </div>
                             </div>
                             <div>
                                 <label className="pro-label">Reason</label>
-                                <textarea rows={3} className="pro-input resize-none" placeholder="Describe reason for overtime..." />
+                                <textarea 
+                                    rows={3} 
+                                    className="pro-input resize-none" 
+                                    placeholder="Describe reason for overtime..." 
+                                    value={overtimeForm.reason} 
+                                    onChange={(e) => setOvertimeForm({ ...overtimeForm, reason: e.target.value })} 
+                                />
                             </div>
                         </div>
                         <div className="pro-modal-footer">
                             <button onClick={() => { setShowOvertimeModal(false); setSelectedEmployee(null); setSearchTerm(''); }} className="btn btn-secondary">Cancel</button>
                             <button 
-                                onClick={() => { setShowOvertimeModal(false); setSelectedEmployee(null); setSearchTerm(''); }} 
+                                onClick={handleSubmitOvertimeRequest} 
                                 className="btn btn-primary"
                                 disabled={!selectedEmployee}
                             >
@@ -500,12 +774,92 @@ const AttendanceTable = () => {
 
             {/* Add Shift Modal */}
             {showAddShiftModal && (
-                <ShiftFormModal title="Add Shift" onSubmit={handleAddShift} submitLabel="Add Shift" onClose={() => setShowAddShiftModal(false)} />
+                <div className="pro-modal-overlay">
+                    <div className="pro-modal max-w-md" onClick={e => e.stopPropagation()}>
+                        <div className="pro-modal-header">
+                            <h3>Add Shift</h3>
+                            <button onClick={() => setShowAddShiftModal(false)} className="btn-ghost btn-icon"><X className="w-5 h-5 text-gray-400" /></button>
+                        </div>
+                        <div className="pro-modal-body space-y-4">
+                            <div>
+                                <label className="pro-label">Shift Name</label>
+                                <input type="text" value={shiftForm.name} onChange={e => setShiftForm({ ...shiftForm, name: e.target.value })} className="pro-input" placeholder="e.g. Morning Shift" />
+                            </div>
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label className="pro-label">Time In</label>
+                                    <input type="time" value={shiftForm.timeIn} onChange={e => setShiftForm({ ...shiftForm, timeIn: e.target.value })} className="pro-input" />
+                                </div>
+                                <div>
+                                    <label className="pro-label">Time Out</label>
+                                    <input type="time" value={shiftForm.timeOut} onChange={e => setShiftForm({ ...shiftForm, timeOut: e.target.value })} className="pro-input" />
+                                </div>
+                            </div>
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label className="pro-label">Grace Period (min)</label>
+                                    <input type="number" value={shiftForm.grace} onChange={e => setShiftForm({ ...shiftForm, grace: e.target.value })} className="pro-input" />
+                                </div>
+                                <div>
+                                    <label className="pro-label">Status</label>
+                                    <select value={shiftForm.status} onChange={e => setShiftForm({ ...shiftForm, status: e.target.value })} className="pro-select">
+                                        <option>Active</option>
+                                        <option>Inactive</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div className="pro-modal-footer">
+                            <button onClick={() => setShowAddShiftModal(false)} className="btn btn-secondary">Cancel</button>
+                            <button onClick={handleAddShift} className="btn btn-primary">Add Shift</button>
+                        </div>
+                    </div>
+                </div>
             )}
 
             {/* Edit Shift Modal */}
             {showEditShiftModal && (
-                <ShiftFormModal title="Edit Shift" onSubmit={handleEditShift} submitLabel="Save Changes" onClose={() => setShowEditShiftModal(false)} />
+                <div className="pro-modal-overlay">
+                    <div className="pro-modal max-w-md" onClick={e => e.stopPropagation()}>
+                        <div className="pro-modal-header">
+                            <h3>Edit Shift</h3>
+                            <button onClick={() => setShowEditShiftModal(false)} className="btn-ghost btn-icon"><X className="w-5 h-5 text-gray-400" /></button>
+                        </div>
+                        <div className="pro-modal-body space-y-4">
+                            <div>
+                                <label className="pro-label">Shift Name</label>
+                                <input type="text" value={shiftForm.name} onChange={e => setShiftForm({ ...shiftForm, name: e.target.value })} className="pro-input" placeholder="e.g. Morning Shift" />
+                            </div>
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label className="pro-label">Time In</label>
+                                    <input type="time" value={shiftForm.timeIn} onChange={e => setShiftForm({ ...shiftForm, timeIn: e.target.value })} className="pro-input" />
+                                </div>
+                                <div>
+                                    <label className="pro-label">Time Out</label>
+                                    <input type="time" value={shiftForm.timeOut} onChange={e => setShiftForm({ ...shiftForm, timeOut: e.target.value })} className="pro-input" />
+                                </div>
+                            </div>
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label className="pro-label">Grace Period (min)</label>
+                                    <input type="number" value={shiftForm.grace} onChange={e => setShiftForm({ ...shiftForm, grace: e.target.value })} className="pro-input" />
+                                </div>
+                                <div>
+                                    <label className="pro-label">Status</label>
+                                    <select value={shiftForm.status} onChange={e => setShiftForm({ ...shiftForm, status: e.target.value })} className="pro-select">
+                                        <option>Active</option>
+                                        <option>Inactive</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div className="pro-modal-footer">
+                            <button onClick={() => setShowEditShiftModal(false)} className="btn btn-secondary">Cancel</button>
+                            <button onClick={handleEditShift} className="btn btn-primary">Save Changes</button>
+                        </div>
+                    </div>
+                </div>
             )}
         </div>
     );
