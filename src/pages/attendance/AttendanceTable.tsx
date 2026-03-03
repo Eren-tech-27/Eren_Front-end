@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { CheckCircle, AlertTriangle, XCircle, Clock, Upload, X, Plus, Check, Edit, Eye } from 'lucide-react';
+import { CheckCircle, AlertTriangle, XCircle, Clock, Upload, X, Plus, Check, Edit, Eye, Search } from 'lucide-react';
 
 type Tab = 'dtr' | 'overtime' | 'setup';
 
@@ -11,6 +11,10 @@ const AttendanceTable = () => {
     const [showEditShiftModal, setShowEditShiftModal] = useState(false);
     const [editingShift, setEditingShift] = useState<any>(null);
     const [shiftForm, setShiftForm] = useState({ name: '', timeIn: '08:00', timeOut: '17:00', grace: '15', status: 'Active' });
+    
+    // New states for employee selection in Overtime Modal
+    const [searchTerm, setSearchTerm] = useState('');
+    const [selectedEmployee, setSelectedEmployee] = useState<string | null>(null);
 
     const tabs = [
         { id: 'dtr' as Tab, label: 'Daily Time Record', icon: Clock },
@@ -36,7 +40,6 @@ const AttendanceTable = () => {
             { empId: 'EMP-005', name: 'Bautista, Pedro', timeIn: '08:05 AM', timeOut: '05:00 PM', status: 'Late', late: '5 min', overtime: '-' },
             { empId: 'EMP-006', name: 'Fernandez, Rosa', timeIn: '07:50 AM', timeOut: '05:15 PM', status: 'Present', late: '-', overtime: '0:15' },
         ];
-        // Combine with user logs, mapping fields accordingly
         const mappedUserLogs = userLogs.map((l: any) => ({
             empId: 'EMP-USER',
             name: 'Employee User',
@@ -48,6 +51,12 @@ const AttendanceTable = () => {
         }));
         return [...mappedUserLogs, ...baseRecords];
     });
+
+    // Derived unique list of employees for the dropdown/search
+    const uniqueEmployees = Array.from(new Set(dtrRecords.map(r => r.name))).sort();
+    const filteredEmployees = uniqueEmployees.filter(emp => 
+        emp.toLowerCase().includes(searchTerm.toLowerCase())
+    );
 
     useEffect(() => {
         const handleStorageChange = () => {
@@ -63,7 +72,6 @@ const AttendanceTable = () => {
                     late: '-',
                     overtime: '0:00'
                 }));
-                // Using a callback to ensure we have latest state
                 setDtrRecords(prev => {
                     const baseRecords = prev.filter(r => r.empId !== 'EMP-USER');
                     return [...mappedUserLogs, ...baseRecords];
@@ -260,7 +268,6 @@ const AttendanceTable = () => {
                                 </table>
                             </div>
 
-                            {/* Late & Undertime + Calendar */}
                             <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
                                 <div className="lg:col-span-2">
                                     <h4 className="text-sm font-bold text-gray-700 mb-3">Late & Undertime Summary</h4>
@@ -293,6 +300,9 @@ const AttendanceTable = () => {
                         <div className="space-y-5">
                             <div className="flex justify-between items-center">
                                 <h3 className="text-base font-bold text-gray-800">Overtime Requests</h3>
+                                <button onClick={() => setShowOvertimeModal(true)} className="btn btn-primary">
+                                    <Plus className="w-4 h-4" /> Request Overtime
+                                </button>
                             </div>
                             <div className="overflow-x-auto rounded-xl border border-gray-100">
                                 <table className="pro-table">
@@ -307,7 +317,7 @@ const AttendanceTable = () => {
                                         {overtimeRequests.map((r, i) => (
                                             <tr key={i}>
                                                 <td>{r.date}</td>
-                                                <td className="!font-medium !text-gray-800">{r.name || r.employee}</td>
+                                                <td className="!font-medium !text-gray-800">{r.employee}</td>
                                                 <td>{r.duration}</td>
                                                 <td>{r.reason}</td>
                                                 <td><span className={`badge ${statusBadge[r.status]}`}><span className="badge-dot" />{r.status}</span></td>
@@ -403,15 +413,67 @@ const AttendanceTable = () => {
                 </div>
             )}
 
-            {/* Request Overtime Modal */}
+            {/* Request Overtime Modal with Employee Search/Dropdown */}
             {showOvertimeModal && (
                 <div className="pro-modal-overlay">
                     <div className="pro-modal max-w-md" onClick={e => e.stopPropagation()}>
                         <div className="pro-modal-header">
                             <h3>Request Overtime</h3>
-                            <button onClick={() => setShowOvertimeModal(false)} className="btn-ghost btn-icon"><X className="w-5 h-5 text-gray-400" /></button>
+                            <button onClick={() => { setShowOvertimeModal(false); setSelectedEmployee(null); setSearchTerm(''); }} className="btn-ghost btn-icon">
+                                <X className="w-5 h-5 text-gray-400" />
+                            </button>
                         </div>
                         <div className="pro-modal-body space-y-4">
+                            {/* NEW: Employee Selection */}
+                            <div>
+                                <label className="pro-label">Select Employee</label>
+                                <div className="relative group">
+                                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                        <Search className="h-4 w-4 text-gray-400" />
+                                    </div>
+                                    <input 
+                                        type="text" 
+                                        className="pro-input !pl-10" 
+                                        placeholder="Search employee name..."
+                                        value={searchTerm}
+                                        onChange={(e) => {
+                                            setSearchTerm(e.target.value);
+                                            setSelectedEmployee(null); // Reset selection when typing
+                                        }}
+                                    />
+                                    {searchTerm && !selectedEmployee && (
+                                        <div className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-xl shadow-xl max-h-48 overflow-y-auto">
+                                            {filteredEmployees.length > 0 ? (
+                                                filteredEmployees.map((emp) => (
+                                                    <div 
+                                                        key={emp} 
+                                                        className="px-4 py-2 hover:bg-emerald-50 cursor-pointer text-sm text-gray-700 flex items-center justify-between"
+                                                        onClick={() => {
+                                                            setSelectedEmployee(emp);
+                                                            setSearchTerm(emp);
+                                                        }}
+                                                    >
+                                                        {emp}
+                                                        <Plus className="w-3 h-3 text-gray-300" />
+                                                    </div>
+                                                ))
+                                            ) : (
+                                                <div className="px-4 py-2 text-sm text-gray-400 italic">No employees found</div>
+                                            )}
+                                        </div>
+                                    )}
+                                    {selectedEmployee && (
+                                        <div className="mt-2 flex items-center gap-2 bg-emerald-50 text-emerald-700 px-3 py-1.5 rounded-lg text-xs font-medium border border-emerald-100 animate-in fade-in slide-in-from-top-1">
+                                            <CheckCircle className="w-3.5 h-3.5" />
+                                            Selected: {selectedEmployee}
+                                            <button onClick={() => { setSelectedEmployee(null); setSearchTerm(''); }} className="ml-auto hover:text-emerald-900">
+                                                <X className="w-3 h-3" />
+                                            </button>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+
                             <div><label className="pro-label">Date</label><input type="date" className="pro-input" /></div>
                             <div className="grid grid-cols-2 gap-4">
                                 <div><label className="pro-label">Start Time</label><input type="time" className="pro-input" /></div>
@@ -423,8 +485,14 @@ const AttendanceTable = () => {
                             </div>
                         </div>
                         <div className="pro-modal-footer">
-                            <button onClick={() => setShowOvertimeModal(false)} className="btn btn-secondary">Cancel</button>
-                            <button onClick={() => setShowOvertimeModal(false)} className="btn btn-primary">Submit Request</button>
+                            <button onClick={() => { setShowOvertimeModal(false); setSelectedEmployee(null); setSearchTerm(''); }} className="btn btn-secondary">Cancel</button>
+                            <button 
+                                onClick={() => { setShowOvertimeModal(false); setSelectedEmployee(null); setSearchTerm(''); }} 
+                                className="btn btn-primary"
+                                disabled={!selectedEmployee}
+                            >
+                                Submit Request
+                            </button>
                         </div>
                     </div>
                 </div>

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Clock, CheckCircle, XCircle, AlertTriangle, Plus, X, Calendar } from 'lucide-react';
+import { Clock, CheckCircle, XCircle, AlertTriangle, Plus, X, Calendar, Search } from 'lucide-react';
 
 type Tab = 'request' | 'balance' | 'history';
 type LeaveStatus = 'Pending' | 'Approved' | 'Rejected';
@@ -8,7 +8,10 @@ const LeaveManagement = () => {
     const [activeTab, setActiveTab] = useState<Tab>('request');
     const [showApplyModal, setShowApplyModal] = useState(false);
     const [showBalanceHistory, setShowBalanceHistory] = useState(false);
-    const [selectedEmployee, setSelectedEmployee] = useState('');
+    
+    // Search states for Employee Selection
+    const [searchTerm, setSearchTerm] = useState('');
+    const [selectedEmployee, setSelectedEmployee] = useState<string | null>(null);
 
     const tabs = [
         { id: 'request' as Tab, label: 'Leave Requests', icon: Calendar },
@@ -28,6 +31,20 @@ const LeaveManagement = () => {
         Approved: 'badge-success',
         Rejected: 'badge-danger',
     };
+
+    // Employee list derived from data
+    const employeeList = [
+        'Dela Cruz, Juan',
+        'Santos, Maria',
+        'Reyes, Jose',
+        'Garcia, Ana',
+        'Bautista, Pedro',
+        'Fernandez, Rosa'
+    ];
+
+    const filteredEmployees = employeeList.filter(emp => 
+        emp.toLowerCase().includes(searchTerm.toLowerCase())
+    );
 
     const leaveRequests = [
         { employee: 'Dela Cruz, Juan', department: 'SimpleVia', leaveType: 'Vacation Leave', startDate: '2026-02-26', endDate: '2026-02-28', days: 3, status: 'Pending' as LeaveStatus },
@@ -81,6 +98,12 @@ const LeaveManagement = () => {
                 </div>
             </div>
         );
+    };
+
+    const resetSelection = () => {
+        setShowApplyModal(false);
+        setSearchTerm('');
+        setSelectedEmployee(null);
     };
 
     return (
@@ -227,21 +250,59 @@ const LeaveManagement = () => {
                     <div className="pro-modal max-w-md" onClick={e => e.stopPropagation()}>
                         <div className="pro-modal-header">
                             <h3>Apply for Leave</h3>
-                            <button onClick={() => setShowApplyModal(false)} className="btn-ghost btn-icon"><X className="w-5 h-5 text-gray-400" /></button>
+                            <button onClick={resetSelection} className="btn-ghost btn-icon"><X className="w-5 h-5 text-gray-400" /></button>
                         </div>
                         <div className="pro-modal-body space-y-4">
+                            {/* NEW: Searchable Employee Selection */}
                             <div>
-                                <label className="pro-label">Employee</label>
-                                <select className="pro-select">
-                                    <option value="" disabled selected>Select Employee</option>
-                                    <option>Dela Cruz, Juan</option>
-                                    <option>Santos, Maria</option>
-                                    <option>Reyes, Jose</option>
-                                    <option>Garcia, Ana</option>
-                                    <option>Bautista, Pedro</option>
-                                    <option>Fernandez, Rosa</option>
-                                </select>
+                                <label className="pro-label">Select Employee</label>
+                                <div className="relative group">
+                                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                        <Search className="h-4 w-4 text-gray-400" />
+                                    </div>
+                                    <input 
+                                        type="text" 
+                                        className="pro-input !pl-10" 
+                                        placeholder="Search employee name..."
+                                        value={searchTerm}
+                                        onChange={(e) => {
+                                            setSearchTerm(e.target.value);
+                                            setSelectedEmployee(null); 
+                                        }}
+                                    />
+                                    {searchTerm && !selectedEmployee && (
+                                        <div className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-xl shadow-xl max-h-48 overflow-y-auto">
+                                            {filteredEmployees.length > 0 ? (
+                                                filteredEmployees.map((emp) => (
+                                                    <div 
+                                                        key={emp} 
+                                                        className="px-4 py-2 hover:bg-emerald-50 cursor-pointer text-sm text-gray-700 flex items-center justify-between"
+                                                        onClick={() => {
+                                                            setSelectedEmployee(emp);
+                                                            setSearchTerm(emp);
+                                                        }}
+                                                    >
+                                                        {emp}
+                                                        <Plus className="w-3 h-3 text-gray-300" />
+                                                    </div>
+                                                ))
+                                            ) : (
+                                                <div className="px-4 py-2 text-sm text-gray-400 italic">No employees found</div>
+                                            )}
+                                        </div>
+                                    )}
+                                    {selectedEmployee && (
+                                        <div className="mt-2 flex items-center gap-2 bg-emerald-50 text-emerald-700 px-3 py-1.5 rounded-lg text-xs font-medium border border-emerald-100 animate-in fade-in slide-in-from-top-1">
+                                            <CheckCircle className="w-3.5 h-3.5" />
+                                            Selected: {selectedEmployee}
+                                            <button onClick={() => { setSelectedEmployee(null); setSearchTerm(''); }} className="ml-auto hover:text-emerald-900">
+                                                <X className="w-3 h-3" />
+                                            </button>
+                                        </div>
+                                    )}
+                                </div>
                             </div>
+
                             <div>
                                 <label className="pro-label">Leave Type</label>
                                 <select className="pro-select">
@@ -257,8 +318,8 @@ const LeaveManagement = () => {
                             <div><label className="pro-label">Reason</label><textarea rows={3} className="pro-input resize-none" placeholder="Reason for leave..." /></div>
                         </div>
                         <div className="pro-modal-footer">
-                            <button onClick={() => setShowApplyModal(false)} className="btn btn-secondary">Cancel</button>
-                            <button onClick={() => setShowApplyModal(false)} className="btn btn-primary">Submit Application</button>
+                            <button onClick={resetSelection} className="btn btn-secondary">Cancel</button>
+                            <button onClick={resetSelection} className="btn btn-primary" disabled={!selectedEmployee}>Submit Application</button>
                         </div>
                     </div>
                 </div>
@@ -270,7 +331,7 @@ const LeaveManagement = () => {
                     <div className="pro-modal max-w-md" onClick={e => e.stopPropagation()}>
                         <div className="pro-modal-header">
                             <h3>Leave Balance History</h3>
-                            <button onClick={() => setShowBalanceHistory(false)} className="btn-ghost btn-icon"><X className="w-5 h-5 text-gray-400" /></button>
+                            <button onClick={() => { setShowBalanceHistory(false); setSelectedEmployee(null); }} className="btn-ghost btn-icon"><X className="w-5 h-5 text-gray-400" /></button>
                         </div>
                         <div className="pro-modal-body">
                             <p className="text-sm text-gray-500 mb-4 font-medium">{selectedEmployee}</p>
@@ -301,7 +362,7 @@ const LeaveManagement = () => {
                             </div>
                         </div>
                         <div className="pro-modal-footer">
-                            <button onClick={() => setShowBalanceHistory(false)} className="btn btn-secondary">Close</button>
+                            <button onClick={() => { setShowBalanceHistory(false); setSelectedEmployee(null); }} className="btn btn-secondary">Close</button>
                         </div>
                     </div>
                 </div>
