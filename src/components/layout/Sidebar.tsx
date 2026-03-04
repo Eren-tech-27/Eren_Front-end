@@ -39,7 +39,6 @@ const Sidebar = () => {
     ];
 
     const moduleNav = [
-        { icon: UserCircle, label: 'Self-Service', path: '/dashboard/self-service' },
         { icon: Package, label: 'Asset Management', path: '/dashboard/assets' },
     ];
 
