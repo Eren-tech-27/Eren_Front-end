@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { User, FileText, Calendar, Clock, Download, Eye, ChevronRight, CheckCircle2, Clock4, XCircle, Edit } from 'lucide-react';
+import { User, FileText, Calendar, Clock, Download, Eye, ChevronRight, CheckCircle2, Clock4, XCircle, Edit, X } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 const EmployeeSelfService = () => {
@@ -31,6 +31,10 @@ const EmployeeSelfService = () => {
         { id: 2, type: 'Vacation Leave', dates: 'Mar 01 - Mar 05, 2026', status: 'Pending' },
     ]);
 
+    // --- State for Modal ---
+    const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+    const [editRequestText, setEditRequestText] = useState('');
+
     // Helpers
     const getStatusColor = (status: string) => {
         switch (status) {
@@ -52,8 +56,16 @@ const EmployeeSelfService = () => {
         }
     };
 
+    const handleEditSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        // TODO: Replace with actual API call to submit the request
+        alert(`Edit Request Submitted:\n${editRequestText}`);
+        setIsEditModalOpen(false);
+        setEditRequestText(''); // Clear the form
+    };
+
     return (
-        <div className="space-y-6">
+        <div className="space-y-6 relative">
             <div className="page-header animate-fade-in-up">
                 <h1>Employee Dashboard</h1>
                 <p>Welcome back! Here is a quick overview of your work details.</p>
@@ -87,7 +99,10 @@ const EmployeeSelfService = () => {
                             </div>
                             <h3 className="font-bold text-gray-800">Profile Details</h3>
                         </div>
-                        <button className="text-xs font-bold text-blue-600 hover:text-blue-700 flex items-center gap-1.5 transition-colors bg-blue-50 hover:bg-blue-100 px-3 py-1.5 rounded-md">
+                        <button 
+                            onClick={() => setIsEditModalOpen(true)}
+                            className="text-xs font-bold text-blue-600 hover:text-blue-700 flex items-center gap-1.5 transition-colors bg-blue-50 hover:bg-blue-100 px-3 py-1.5 rounded-md"
+                        >
                             <Edit className="w-3.5 h-3.5" /> Request Edit
                         </button>
                     </div>
@@ -211,6 +226,61 @@ const EmployeeSelfService = () => {
                     </div>
                 </div>
             </div>
+
+            {/* --- Edit Request Modal Overlay --- */}
+            {isEditModalOpen && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/50 backdrop-blur-sm animate-fade-in">
+                    <div className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden transform transition-all">
+                        <div className="p-5 border-b border-gray-100 flex items-center justify-between bg-gray-50/50">
+                            <h3 className="font-bold text-gray-800 text-lg flex items-center gap-2">
+                                <Edit className="w-5 h-5 text-blue-600" /> Request Profile Edit
+                            </h3>
+                            <button 
+                                onClick={() => setIsEditModalOpen(false)}
+                                className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+                            >
+                                <X className="w-5 h-5" />
+                            </button>
+                        </div>
+                        
+                        <form onSubmit={handleEditSubmit} className="p-6">
+                            <div className="mb-5">
+                                <label htmlFor="editRequest" className="block text-sm font-semibold text-gray-700 mb-2">
+                                    What details need to be updated?
+                                </label>
+                                <p className="text-xs text-gray-500 mb-3">
+                                    Please specify which fields are incorrect and provide the correct information. Your request will be sent to HR for approval.
+                                </p>
+                                <textarea
+                                    id="editRequest"
+                                    rows={4}
+                                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all text-sm text-gray-800 resize-none"
+                                    placeholder="Example: My phone number has changed to +63 999 888 7777..."
+                                    value={editRequestText}
+                                    onChange={(e) => setEditRequestText(e.target.value)}
+                                    required
+                                />
+                            </div>
+                            
+                            <div className="flex items-center justify-end gap-3 pt-2">
+                                <button
+                                    type="button"
+                                    onClick={() => setIsEditModalOpen(false)}
+                                    className="px-4 py-2.5 text-sm font-bold text-gray-600 hover:bg-gray-100 rounded-xl transition-colors"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    type="submit"
+                                    className="px-4 py-2.5 text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-xl transition-colors shadow-sm"
+                                >
+                                    Submit Request
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };
