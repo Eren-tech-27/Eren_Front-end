@@ -1,5 +1,6 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import { AttendanceProvider } from './context/AttendanceContext';
 import Login from './pages/Login';
 import Layout from './components/layout/Layout';
 import Dashboard from './pages/Dashboard';
@@ -63,7 +64,7 @@ function AppRoutes() {
         <Route path="personal-records" element={<AdminOnly><EmployeeList /></AdminOnly>} />
         <Route path="employee/:id" element={<AdminOnly><EmployeeProfile /></AdminOnly>} />
         <Route path="attendance" element={<AdminOnly><AttendanceTable /></AdminOnly>} />
-        <Route path="leave" element={<AdminOnly><LeaveManagement /></AdminOnly>} /> {/* <-- MOVED: Now restricted to Admins only */}
+        <Route path="leave" element={<AdminOnly><LeaveManagement /></AdminOnly>} /> 
         <Route path="payroll" element={<AdminOnly><Payroll /></AdminOnly>} />
         <Route path="assets" element={<AdminOnly><AssetManagement /></AdminOnly>} />
         <Route path="clearance" element={<AdminOnly><ClearanceList /></AdminOnly>} />
@@ -76,7 +77,7 @@ function AppRoutes() {
         
         {/* Employee Self-Service Pages */}
         <Route path="my-attendance" element={<MyAttendance />} />
-        <Route path="my-leave" element={<MyLeave />} /> {/* <-- ADDED: Route for Employee Leave */}
+        <Route path="my-leave" element={<MyLeave />} />
         <Route path="self-service" element={<EmployeeSelfService />} />
       </Route>
 
@@ -90,9 +91,11 @@ function AppRoutes() {
 function App() {
   return (
     <AuthProvider>
-      <Router>
-        <AppRoutes />
-      </Router>
+      <AttendanceProvider>
+        <Router>
+          <AppRoutes />
+        </Router>
+      </AttendanceProvider>
     </AuthProvider>
   );
 }
