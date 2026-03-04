@@ -1,23 +1,9 @@
 import { useState } from 'react';
-import { User, FileText, Calendar, Bell, Download, Eye, Clock } from 'lucide-react';
-
-// Import our new extracted components
-import MyAttendance from './MyAttendance';
-import MyLeave from './MyLeave';
-
-type Tab = 'profile' | 'payslips' | 'leave' | 'attendance' | 'requests';
+import { User, FileText, Calendar, Clock, Download, Eye, ChevronRight, CheckCircle2, Clock4, XCircle } from 'lucide-react';
+import { Link } from 'react-router-dom'; // Added for navigation
 
 const EmployeeSelfService = () => {
-    const [activeTab, setActiveTab] = useState<Tab>('profile');
-
-    const tabs = [
-        { id: 'profile' as Tab, label: 'My Profile', icon: User },
-        { id: 'payslips' as Tab, label: 'My Payslips', icon: FileText },
-        { id: 'leave' as Tab, label: 'My Leave', icon: Calendar },
-        { id: 'attendance' as Tab, label: 'My Attendance', icon: Clock },
-        { id: 'requests' as Tab, label: 'My Requests', icon: Bell },
-    ];
-
+    // --- Mock Data ---
     const [profile] = useState({
         name: 'Juan Dela Cruz',
         id: 'EMP-001',
@@ -29,112 +15,179 @@ const EmployeeSelfService = () => {
         status: 'Active',
     });
 
-    const [payslips] = useState([
+    const [recentPayslips] = useState([
         { id: 1, period: 'Feb 1-15, 2026', netPay: '₱28,500', date: 'Feb 15, 2026' },
         { id: 2, period: 'Jan 16-31, 2026', netPay: '₱28,500', date: 'Jan 31, 2026' },
-        { id: 3, period: 'Jan 1-15, 2026', netPay: '₱27,800', date: 'Jan 15, 2026' },
     ]);
 
-    const [myRequests] = useState([
-        { id: 1, type: 'Overtime Request', date: '2026-02-18', details: '2 hours - Project deadline', status: 'Approved' },
-        { id: 2, type: 'Certificate Request', date: '2026-02-15', details: 'Certificate of Employment', status: 'Completed' },
+    const [recentAttendance] = useState([
+        { id: 1, date: 'Feb 18, 2026', timeIn: '07:55 AM', timeOut: '05:05 PM', status: 'On Time' },
+        { id: 2, date: 'Feb 17, 2026', timeIn: '08:10 AM', timeOut: '05:00 PM', status: 'Late' },
+        { id: 3, date: 'Feb 16, 2026', timeIn: '07:50 AM', timeOut: '05:15 PM', status: 'On Time' },
     ]);
 
-    const statusBadge: Record<string, string> = {
-        Pending: 'badge-warning',
-        Approved: 'badge-success',
-        Completed: 'badge-info',
+    const [recentLeave] = useState([
+        { id: 1, type: 'Sick Leave', dates: 'Feb 12 - Feb 13, 2026', status: 'Approved' },
+        { id: 2, type: 'Vacation Leave', dates: 'Mar 01 - Mar 05, 2026', status: 'Pending' },
+    ]);
+
+    // Helpers
+    const getStatusColor = (status: string) => {
+        switch (status) {
+            case 'On Time': return 'text-emerald-600 bg-emerald-50';
+            case 'Late': return 'text-rose-600 bg-rose-50';
+            case 'Approved': return 'text-emerald-600 bg-emerald-50';
+            case 'Pending': return 'text-amber-600 bg-amber-50';
+            case 'Rejected': return 'text-rose-600 bg-rose-50';
+            default: return 'text-gray-600 bg-gray-50';
+        }
+    };
+
+    const getStatusIcon = (status: string) => {
+        switch (status) {
+            case 'Approved': return <CheckCircle2 className="w-4 h-4 text-emerald-500" />;
+            case 'Pending': return <Clock4 className="w-4 h-4 text-amber-500" />;
+            case 'Rejected': return <XCircle className="w-4 h-4 text-rose-500" />;
+            default: return null;
+        }
     };
 
     return (
         <div className="space-y-6">
             <div className="page-header animate-fade-in-up">
-                <h1>Employee Self-Service</h1>
-                <p>View your personal information, payslips, and submit requests</p>
+                <h1>Employee Dashboard</h1>
+                <p>Welcome back! Here is a quick overview of your work details.</p>
             </div>
 
             {/* Employee Banner Card */}
-            <div className="rounded-2xl overflow-hidden animate-fade-in-up" style={{ background: 'linear-gradient(135deg, #059669, #10b981, #34d399)', animationDelay: '0.1s', opacity: 0 }}>
+            <div className="rounded-2xl overflow-hidden animate-fade-in-up shadow-lg" style={{ background: 'linear-gradient(135deg, #059669, #10b981, #34d399)', animationDelay: '0.1s', opacity: 0, animationFillMode: 'forwards' }}>
                 <div className="p-6 flex items-center gap-5">
-                    <div className="w-16 h-16 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center text-white text-2xl font-bold border-2 border-white/30">
+                    <div className="w-16 h-16 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center text-white text-2xl font-bold border-2 border-white/30 shadow-inner">
                         {profile.name.split(' ').map(n => n[0]).join('').substring(0, 2)}
                     </div>
                     <div>
-                        <h2 className="text-xl font-bold text-white">{profile.name}</h2>
-                        <p className="text-emerald-100 text-sm">{profile.position} • {profile.department}</p>
-                        <span className="inline-flex items-center gap-1.5 mt-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-white/20 text-white backdrop-blur-sm">
-                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-200 animate-pulse" />{profile.status}
+                        <h2 className="text-2xl font-bold text-white tracking-tight">{profile.name}</h2>
+                        <p className="text-emerald-50 font-medium mt-0.5">{profile.position} • {profile.department}</p>
+                        <span className="inline-flex items-center gap-1.5 mt-2 px-3 py-1 rounded-full text-xs font-bold bg-white/20 text-white backdrop-blur-md border border-white/10 shadow-sm">
+                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-300 animate-pulse" />{profile.status} Employee
                         </span>
                     </div>
                 </div>
             </div>
 
-            {/* Tabs Card */}
-            <div className="pro-card animate-fade-in-up" style={{ animationDelay: '0.2s', opacity: 0 }}>
-                <div className="px-6 pt-4">
-                    <div className="pro-tabs" style={{ overflowX: 'auto' }}>
-                        {tabs.map(tab => (
-                            <button key={tab.id} onClick={() => setActiveTab(tab.id)}
-                                className={`pro-tab flex items-center gap-2 whitespace-nowrap ${activeTab === tab.id ? 'active' : ''}`}>
-                                <tab.icon className="w-4 h-4" />
-                                {tab.label}
-                            </button>
+            {/* Dashboard Widgets Grid */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                
+                {/* WIDGET 1: Profile Summary */}
+                <div className="pro-card animate-fade-in-up" style={{ animationDelay: '0.2s', opacity: 0, animationFillMode: 'forwards' }}>
+                    <div className="p-5 border-b border-gray-100 flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center">
+                            <User className="w-4 h-4" />
+                        </div>
+                        <h3 className="font-bold text-gray-800">Profile Details</h3>
+                    </div>
+                    <div className="p-5 grid grid-cols-2 gap-4">
+                        <div>
+                            <p className="text-[11px] text-gray-400 font-semibold uppercase tracking-wider">Employee ID</p>
+                            <p className="text-sm font-medium text-gray-800 mt-0.5">{profile.id}</p>
+                        </div>
+                        <div>
+                            <p className="text-[11px] text-gray-400 font-semibold uppercase tracking-wider">Hire Date</p>
+                            <p className="text-sm font-medium text-gray-800 mt-0.5">{profile.hireDate}</p>
+                        </div>
+                        <div>
+                            <p className="text-[11px] text-gray-400 font-semibold uppercase tracking-wider">Email</p>
+                            <p className="text-sm font-medium text-gray-800 mt-0.5 truncate">{profile.email}</p>
+                        </div>
+                        <div>
+                            <p className="text-[11px] text-gray-400 font-semibold uppercase tracking-wider">Phone</p>
+                            <p className="text-sm font-medium text-gray-800 mt-0.5">{profile.phone}</p>
+                        </div>
+                    </div>
+                </div>
+
+                {/* WIDGET 2: Recent Attendance */}
+                <div className="pro-card animate-fade-in-up flex flex-col" style={{ animationDelay: '0.3s', opacity: 0, animationFillMode: 'forwards' }}>
+                    <div className="p-5 border-b border-gray-100 flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                            <div className="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center">
+                                <Clock className="w-4 h-4" />
+                            </div>
+                            <h3 className="font-bold text-gray-800">Recent Attendance</h3>
+                        </div>
+                        <Link to="/dashboard/my-attendance" className="text-xs font-bold text-emerald-600 hover:text-emerald-700 flex items-center gap-1 transition-colors">
+                            View Log <ChevronRight className="w-3 h-3" />
+                        </Link>
+                    </div>
+                    <div className="p-0 flex-1 flex flex-col">
+                        {recentAttendance.map((record, index) => (
+                            <div key={record.id} className={`px-5 py-3.5 flex items-center justify-between ${index !== recentAttendance.length - 1 ? 'border-b border-gray-50' : ''} hover:bg-gray-50/50 transition-colors`}>
+                                <div>
+                                    <p className="text-sm font-bold text-gray-800">{record.date}</p>
+                                    <p className="text-xs text-gray-500 mt-0.5">{record.timeIn} - {record.timeOut}</p>
+                                </div>
+                                <span className={`px-2.5 py-1 rounded-md text-[11px] font-bold ${getStatusColor(record.status)}`}>
+                                    {record.status}
+                                </span>
+                            </div>
                         ))}
                     </div>
                 </div>
-                
-                <div className="p-6">
-                    {/* PROFILE TAB */}
-                    {activeTab === 'profile' && (
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                            {Object.entries(profile).map(([key, value]) => (
-                                <div key={key} className="p-4 bg-gray-50 rounded-xl border border-gray-100">
-                                    <p className="text-[10px] text-gray-400 uppercase tracking-wider font-semibold mb-1">{key.replace(/([A-Z])/g, ' $1').trim()}</p>
-                                    <p className="text-sm font-semibold text-gray-800">{value}</p>
-                                </div>
-                            ))}
+
+                {/* WIDGET 3: Recent Leave Requests */}
+                <div className="pro-card animate-fade-in-up flex flex-col" style={{ animationDelay: '0.4s', opacity: 0, animationFillMode: 'forwards' }}>
+                    <div className="p-5 border-b border-gray-100 flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                            <div className="w-8 h-8 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center">
+                                <Calendar className="w-4 h-4" />
+                            </div>
+                            <h3 className="font-bold text-gray-800">Leave History</h3>
                         </div>
-                    )}
-
-                    {/* PAYSLIPS TAB */}
-                    {activeTab === 'payslips' && (
-                        <div className="space-y-3">
-                            {payslips.map(p => (
-                                <div key={p.id} className="pro-card !shadow-none border border-gray-100 !p-4 flex items-center justify-between hover:border-emerald-200 transition-colors">
-                                    <div>
-                                        <p className="text-sm font-bold text-gray-800">{p.period}</p>
-                                        <p className="text-xs text-gray-400 mt-0.5">Paid: {p.date}</p>
-                                    </div>
-                                    <div className="flex items-center gap-3">
-                                        <p className="text-sm font-bold text-emerald-600">{p.netPay}</p>
-                                        <button className="btn-ghost btn-icon text-blue-500 hover:bg-blue-50" title="View"><Eye className="w-4 h-4" /></button>
-                                        <button className="btn-ghost btn-icon text-gray-400 hover:bg-gray-100" title="Download"><Download className="w-4 h-4" /></button>
-                                    </div>
+                        <Link to="/dashboard/my-leave" className="text-xs font-bold text-emerald-600 hover:text-emerald-700 flex items-center gap-1 transition-colors">
+                            Manage Leave <ChevronRight className="w-3 h-3" />
+                        </Link>
+                    </div>
+                    <div className="p-0 flex-1 flex flex-col">
+                        {recentLeave.map((leave, index) => (
+                            <div key={leave.id} className={`px-5 py-3.5 flex items-center justify-between ${index !== recentLeave.length - 1 ? 'border-b border-gray-50' : ''} hover:bg-gray-50/50 transition-colors`}>
+                                <div>
+                                    <p className="text-sm font-bold text-gray-800">{leave.type}</p>
+                                    <p className="text-xs text-gray-500 mt-0.5">{leave.dates}</p>
                                 </div>
-                            ))}
-                        </div>
-                    )}
-
-                    {/* MY LEAVE TAB - Extracted to its own file! */}
-                    {activeTab === 'leave' && <MyLeave />}
-
-                    {/* ATTENDANCE TAB - Extracted to its own file! */}
-                    {activeTab === 'attendance' && <MyAttendance />}
-
-                    {/* OTHER REQUESTS TAB */}
-                    {activeTab === 'requests' && (
-                        <div className="space-y-3">
-                            {myRequests.map((r) => (
-                                <div key={r.id} className="pro-card !shadow-none border border-gray-100 !p-4 flex items-center justify-between hover:border-emerald-200 transition-colors">
-                                    <div>
-                                        <p className="text-sm font-bold text-gray-800">{r.type}</p>
-                                        <p className="text-xs text-gray-400 mt-0.5">{r.date} • {r.details}</p>
-                                    </div>
-                                    <span className={`badge ${statusBadge[r.status]}`}><span className="badge-dot" />{r.status}</span>
+                                <div className="flex items-center gap-1.5">
+                                    {getStatusIcon(leave.status)}
+                                    <span className="text-xs font-semibold text-gray-700">{leave.status}</span>
                                 </div>
-                            ))}
+                            </div>
+                        ))}
+                    </div>
+                </div>
+
+                {/* WIDGET 4: Recent Payslips */}
+                <div className="pro-card animate-fade-in-up flex flex-col" style={{ animationDelay: '0.5s', opacity: 0, animationFillMode: 'forwards' }}>
+                    <div className="p-5 border-b border-gray-100 flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                            <div className="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center">
+                                <FileText className="w-4 h-4" />
+                            </div>
+                            <h3 className="font-bold text-gray-800">Recent Payslips</h3>
                         </div>
-                    )}
+                    </div>
+                    <div className="p-0 flex-1 flex flex-col">
+                        {recentPayslips.map((payslip, index) => (
+                            <div key={payslip.id} className={`px-5 py-3.5 flex items-center justify-between ${index !== recentPayslips.length - 1 ? 'border-b border-gray-50' : ''} hover:bg-gray-50/50 transition-colors`}>
+                                <div>
+                                    <p className="text-sm font-bold text-gray-800">{payslip.period}</p>
+                                    <p className="text-xs text-gray-500 mt-0.5">Paid: {payslip.date}</p>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <p className="text-sm font-bold text-emerald-600 mr-2">{payslip.netPay}</p>
+                                    <button className="p-1.5 text-blue-500 hover:bg-blue-50 rounded-lg transition-colors" title="View"><Eye className="w-4 h-4" /></button>
+                                    <button className="p-1.5 text-gray-400 hover:bg-gray-100 rounded-lg transition-colors" title="Download"><Download className="w-4 h-4" /></button>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
                 </div>
             </div>
         </div>

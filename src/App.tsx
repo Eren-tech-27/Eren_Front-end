@@ -43,7 +43,14 @@ import './App.css';
 
 // Route guard component that redirects user-role users away from admin-only pages
 const AdminOnly = ({ children }: { children: React.ReactNode }) => {
-  const { role } = useAuth();
+  const { role, isLoggedIn } = useAuth();
+  
+  // Check if the user is logging out/not logged in first
+  if (!isLoggedIn) {
+    return <Navigate to="/login" replace />;
+  }
+
+  // Then check if they have admin privileges
   if (role !== 'admin') {
     return <Navigate to="/dashboard" replace />;
   }
