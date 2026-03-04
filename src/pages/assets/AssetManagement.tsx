@@ -1,15 +1,17 @@
 import { useState } from 'react';
-import { Package, Laptop, Wrench, AlertTriangle, Plus, X, Star, Megaphone } from 'lucide-react';
+import { Package, Laptop, Wrench, AlertTriangle, Plus, X, Star, Megaphone, UserMinus } from 'lucide-react';
 
-type Tab = 'inventory' | 'evaluation' | 'announcements';
+type Tab = 'inventory' | 'clearance' | 'evaluation' | 'announcements';
 
 const AssetManagement = () => {
     const [activeTab, setActiveTab] = useState<Tab>('inventory');
     const [showAddAsset, setShowAddAsset] = useState(false);
     const [showAddAnnouncement, setShowAddAnnouncement] = useState(false);
+    const [showProcessClearance, setShowProcessClearance] = useState(false);
 
     const tabs = [
         { id: 'inventory' as Tab, label: 'Asset Inventory', icon: Package },
+        { id: 'clearance' as Tab, label: 'Resignation & Exit', icon: UserMinus },
         { id: 'evaluation' as Tab, label: 'Performance Evaluation', icon: Star },
         { id: 'announcements' as Tab, label: 'Announcement Board', icon: Megaphone },
     ];
@@ -31,6 +33,9 @@ const AssetManagement = () => {
         'Needs Improvement': 'badge-warning',
         Published: 'badge-success',
         Draft: 'badge-neutral',
+        Pending: 'badge-warning',
+        'In Progress': 'badge-info',
+        Cleared: 'badge-success',
     };
 
     const priorityBadge: Record<string, string> = {
@@ -58,11 +63,16 @@ const AssetManagement = () => {
         { title: 'System Maintenance Notice', date: '2026-02-10', author: 'IT Department', priority: 'Urgent', status: 'Draft', excerpt: 'Scheduled system maintenance on February 28, 2026 from 10 PM to 2 AM.' },
     ];
 
+    const resignations = [
+        { id: 'RES-001', employee: 'Santos, Maria', department: 'Sales', resignationDate: '2026-02-15', lastDay: '2026-03-15', status: 'In Progress' },
+        { id: 'RES-002', employee: 'Reyes, Jose', department: 'IT', resignationDate: '2026-01-28', lastDay: '2026-02-28', status: 'Cleared' },
+    ];
+
     return (
         <div className="space-y-6">
             <div className="page-header animate-fade-in-up">
-                <h1>Asset Management</h1>
-                <p>Track company assets, performance evaluations, and announcements</p>
+                <h1>Asset Management & Exit Clearance</h1>
+                <p>Track company assets, performance evaluations, announcements, and employee exits.</p>
             </div>
 
             {/* Stat Cards */}
@@ -94,6 +104,7 @@ const AssetManagement = () => {
                     </div>
                 </div>
                 <div className="p-6">
+                    {/* Inventory Tab */}
                     {activeTab === 'inventory' && (
                         <div className="space-y-5">
                             <div className="flex justify-between items-center">
@@ -120,6 +131,34 @@ const AssetManagement = () => {
                         </div>
                     )}
 
+                    {/* Resignation & Exit Tab */}
+                    {activeTab === 'clearance' && (
+                        <div className="space-y-5">
+                            <div className="flex justify-between items-center">
+                                <h3 className="text-base font-bold text-gray-800">Resignation & Clearance Records</h3>
+                                <button onClick={() => setShowProcessClearance(true)} className="btn btn-primary"><Plus className="w-4 h-4" /> Process Resignation</button>
+                            </div>
+                            <div className="overflow-x-auto rounded-xl border border-gray-100">
+                                <table className="pro-table">
+                                    <thead><tr>{['Exit ID', 'Employee', 'Department', 'Date Submitted', 'Last Day of Work', 'Status'].map(h => <th key={h}>{h}</th>)}</tr></thead>
+                                    <tbody>
+                                        {resignations.map((r) => (
+                                            <tr key={r.id}>
+                                                <td className="font-mono text-xs">{r.id}</td>
+                                                <td className="!font-medium !text-gray-800">{r.employee}</td>
+                                                <td>{r.department}</td>
+                                                <td>{r.resignationDate}</td>
+                                                <td className="!font-bold">{r.lastDay}</td>
+                                                <td><span className={`badge ${statusBadge[r.status]}`}><span className="badge-dot" />{r.status}</span></td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Performance Evaluation Tab */}
                     {activeTab === 'evaluation' && (
                         <div className="space-y-5">
                             <h3 className="text-base font-bold text-gray-800">Performance Evaluation Results</h3>
@@ -142,6 +181,7 @@ const AssetManagement = () => {
                         </div>
                     )}
 
+                    {/* Announcement Board Tab */}
                     {activeTab === 'announcements' && (
                         <div className="space-y-5">
                             <div className="flex justify-between items-center">
@@ -194,6 +234,49 @@ const AssetManagement = () => {
                             <div><label className="pro-label">Content</label><textarea rows={4} placeholder="Write your announcement..." className="pro-input resize-none" /></div>
                         </div>
                         <div className="pro-modal-footer"><button onClick={() => setShowAddAnnouncement(false)} className="btn btn-secondary">Save Draft</button><button onClick={() => setShowAddAnnouncement(false)} className="btn btn-primary">Publish</button></div>
+                    </div>
+                </div>
+            )}
+
+            {/* Process Resignation Clearance Modal */}
+            {showProcessClearance && (
+                <div className="pro-modal-overlay">
+                    <div className="pro-modal max-w-md" onClick={e => e.stopPropagation()}>
+                        <div className="pro-modal-header">
+                            <h3>Process Employee Resignation</h3>
+                            <button onClick={() => setShowProcessClearance(false)} className="btn-ghost btn-icon"><X className="w-5 h-5 text-gray-400" /></button>
+                        </div>
+                        <div className="pro-modal-body space-y-4">
+                            <div>
+                                <label className="pro-label">Select Employee</label>
+                                <select className="pro-select">
+                                    <option value="">-- Choose Employee --</option>
+                                    <option>Dela Cruz, Juan</option>
+                                    <option>Santos, Maria</option>
+                                    <option>Reyes, Jose</option>
+                                </select>
+                            </div>
+                            
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label className="pro-label">Date Submitted</label>
+                                    <input type="date" className="pro-input" />
+                                </div>
+                                <div>
+                                    <label className="pro-label">Last Day of Work</label>
+                                    <input type="date" className="pro-input" />
+                                </div>
+                            </div>
+
+                            <div>
+                                <label className="pro-label">Notes / Remarks</label>
+                                <textarea rows={2} placeholder="Add any final notes..." className="pro-input resize-none" />
+                            </div>
+                        </div>
+                        <div className="pro-modal-footer">
+                            <button onClick={() => setShowProcessClearance(false)} className="btn btn-secondary">Cancel</button>
+                            <button onClick={() => setShowProcessClearance(false)} className="btn btn-primary">Save Record</button>
+                        </div>
                     </div>
                 </div>
             )}
