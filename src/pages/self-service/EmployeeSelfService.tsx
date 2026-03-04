@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { User, FileText, Calendar, Clock, Download, Eye, ChevronRight, CheckCircle2, Clock4, XCircle } from 'lucide-react';
-import { Link } from 'react-router-dom'; // Added for navigation
+import { User, FileText, Calendar, Clock, Download, Eye, ChevronRight, CheckCircle2, Clock4, XCircle, Edit } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 const EmployeeSelfService = () => {
     // --- Mock Data ---
@@ -80,16 +80,37 @@ const EmployeeSelfService = () => {
                 
                 {/* WIDGET 1: Profile Summary */}
                 <div className="pro-card animate-fade-in-up" style={{ animationDelay: '0.2s', opacity: 0, animationFillMode: 'forwards' }}>
-                    <div className="p-5 border-b border-gray-100 flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center">
-                            <User className="w-4 h-4" />
+                    <div className="p-5 border-b border-gray-100 flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                            <div className="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center">
+                                <User className="w-4 h-4" />
+                            </div>
+                            <h3 className="font-bold text-gray-800">Profile Details</h3>
                         </div>
-                        <h3 className="font-bold text-gray-800">Profile Details</h3>
+                        <button className="text-xs font-bold text-blue-600 hover:text-blue-700 flex items-center gap-1.5 transition-colors bg-blue-50 hover:bg-blue-100 px-3 py-1.5 rounded-md">
+                            <Edit className="w-3.5 h-3.5" /> Request Edit
+                        </button>
                     </div>
                     <div className="p-5 grid grid-cols-2 gap-4">
                         <div>
+                            <p className="text-[11px] text-gray-400 font-semibold uppercase tracking-wider">Full Name</p>
+                            <p className="text-sm font-medium text-gray-800 mt-0.5">{profile.name}</p>
+                        </div>
+                        <div>
                             <p className="text-[11px] text-gray-400 font-semibold uppercase tracking-wider">Employee ID</p>
                             <p className="text-sm font-medium text-gray-800 mt-0.5">{profile.id}</p>
+                        </div>
+                        <div>
+                            <p className="text-[11px] text-gray-400 font-semibold uppercase tracking-wider">Position</p>
+                            <p className="text-sm font-medium text-gray-800 mt-0.5">{profile.position}</p>
+                        </div>
+                        <div>
+                            <p className="text-[11px] text-gray-400 font-semibold uppercase tracking-wider">Department</p>
+                            <p className="text-sm font-medium text-gray-800 mt-0.5">{profile.department}</p>
+                        </div>
+                        <div>
+                            <p className="text-[11px] text-gray-400 font-semibold uppercase tracking-wider">Status</p>
+                            <p className="text-sm font-medium text-gray-800 mt-0.5">{profile.status}</p>
                         </div>
                         <div>
                             <p className="text-[11px] text-gray-400 font-semibold uppercase tracking-wider">Hire Date</p>
