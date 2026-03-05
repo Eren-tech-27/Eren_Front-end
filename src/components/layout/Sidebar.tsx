@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import {
     Home, Users, Clock, FileText, DollarSign, Shield, UserCircle,
-    Package, Settings, ChevronLeft, ChevronRight, LogOut
+    Package, Settings, ChevronLeft, ChevronRight, LogOut,
+    Newspaper, Receipt, TrendingUp
 } from 'lucide-react';
 import { NavLink } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
@@ -29,11 +30,14 @@ const Sidebar = () => {
         { icon: Shield, label: 'Government Compliance', path: '/dashboard/compliance' },
     ];
 
-    // User only sees Self-Service, Attendance Log, Leave Management, and Government Compliance
+    // User only 
     const userNav = [
+        { icon: Newspaper, label: 'Company News', path: '/dashboard/news' },
         { icon: UserCircle, label: 'Self-Service', path: '/dashboard/self-service' },
         { icon: Clock, label: 'My Attendance', path: '/dashboard/my-attendance' },
         { icon: FileText, label: 'My Leave', path: '/dashboard/my-leave' },
+        { icon: Receipt, label: 'My Pay Slips', path: '/dashboard/my-payslips' },
+        { icon: TrendingUp, label: 'My Performance', path: '/dashboard/my-performance' },
         { icon: Shield, label: 'Government Compliance', path: '/dashboard/compliance' },
     ];
 
