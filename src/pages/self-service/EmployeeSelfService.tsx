@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { User, FileText, Clock, Calendar, Download, Eye, Edit, ChevronRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useLeave } from '../../context/LeaveContext';
@@ -8,25 +7,6 @@ const CURRENT_USER = 'Dela Cruz, Juan';
 const EmployeeSelfService = () => {
     const navigate = useNavigate();
     const { leaveRequests } = useLeave();
-
-    // --- New State for Edit Request Modal ---
-    const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-    const [editRequestText, setEditRequestText] = useState("");
-
-    const handleRequestEdit = () => {
-        setIsEditModalOpen(true);
-    };
-
-    const submitEditRequest = () => {
-        // Here you would typically make an API call to send the request to HR
-        console.log("Submitting edit request:", editRequestText);
-        
-        // Close modal, clear input, and notify the user
-        setIsEditModalOpen(false);
-        setEditRequestText("");
-        alert("Edit request submitted successfully!");
-    };
-    // ----------------------------------------
 
     const profile = {
         name: 'Juan Dela Cruz',
@@ -67,7 +47,7 @@ const EmployeeSelfService = () => {
     };
 
     return (
-        <div className="space-y-6 relative">
+        <div className="space-y-6">
             {/* Header */}
             <div className="page-header animate-fade-in-up">
                 <h1>Employee Dashboard</h1>
@@ -100,10 +80,7 @@ const EmployeeSelfService = () => {
                                 <User className="w-4 h-4 text-emerald-600" />
                                 <h3 className="text-sm font-bold text-gray-800">Profile Details</h3>
                             </div>
-                            <button 
-                                onClick={handleRequestEdit}
-                                className="flex items-center gap-1 text-xs font-semibold text-emerald-600 hover:text-emerald-700 transition-colors"
-                            >
+                            <button className="flex items-center gap-1 text-xs font-semibold text-emerald-600 hover:text-emerald-700 transition-colors">
                                 <Edit className="w-3.5 h-3.5" /> Request Edit
                             </button>
                         </div>
@@ -232,42 +209,6 @@ const EmployeeSelfService = () => {
                     </div>
                 </div>
             </div>
-
-            {/* --- Request Edit Modal UI --- */}
-            {isEditModalOpen && (
-                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[100] px-4">
-                    <div className="bg-white p-6 rounded-xl shadow-xl w-full max-w-md animate-fade-in-up" style={{ animationDuration: '0.2s' }}>
-                        <h3 className="text-lg font-bold mb-2 text-gray-900">Request Profile Edit</h3>
-                        <p className="text-sm text-gray-500 mb-5">
-                            Please describe which information needs to be updated and provide the correct details. HR will review your request.
-                        </p>
-                        
-                        <textarea
-                            className="w-full border border-gray-200 rounded-lg p-3 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 bg-gray-50 transition-all resize-none mb-5"
-                            rows={5}
-                            placeholder="Example: My phone number has changed to..."
-                            value={editRequestText}
-                            onChange={(e) => setEditRequestText(e.target.value)}
-                        ></textarea>
-                        
-                        <div className="flex justify-end gap-3">
-                            <button 
-                                onClick={() => setIsEditModalOpen(false)}
-                                className="px-4 py-2 text-sm font-medium text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
-                            >
-                                Cancel
-                            </button>
-                            <button 
-                                onClick={submitEditRequest}
-                                className="px-4 py-2 text-sm font-medium text-white bg-emerald-600 rounded-lg hover:bg-emerald-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                                disabled={!editRequestText.trim()}
-                            >
-                                Submit Request
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
         </div>
     );
 };

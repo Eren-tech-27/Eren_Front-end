@@ -16,6 +16,11 @@ const routeLabels: Record<string, string> = {
     '/dashboard/clearance': 'Clearance',
     '/dashboard/hris': 'HRIS System',
     '/dashboard/settings': 'Admin Settings',
+    '/dashboard/company-news': 'Company News',
+    '/dashboard/my-payslips': 'My Pay Slips',
+    '/dashboard/my-performance': 'My Performance',
+    '/dashboard/company-directory': 'Company Directory',
+    '/dashboard/help-support': 'Help & Support',
 };
 const TopBar = () => {
     const [time, setTime] = useState(new Date());

@@ -2,7 +2,7 @@ import { useState } from 'react';
 import {
     Home, Users, Clock, FileText, DollarSign, Shield, UserCircle,
     Package, Settings, ChevronLeft, ChevronRight, LogOut,
-    Newspaper, Receipt, TrendingUp
+    Newspaper, BarChart3, Building2, HelpCircle, ArrowLeft
 } from 'lucide-react';
 import { NavLink } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
@@ -30,19 +30,18 @@ const Sidebar = () => {
         { icon: Shield, label: 'Government Compliance', path: '/dashboard/compliance' },
     ];
 
-    // User only 
+    // User navigation matching sample images
     const userNav = [
-        { icon: Newspaper, label: 'Company News', path: '/dashboard/news' },
-        { icon: UserCircle, label: 'Self-Service', path: '/dashboard/self-service' },
+        { icon: Newspaper, label: 'Company News', path: '/dashboard/company-news' },
         { icon: Clock, label: 'My Attendance', path: '/dashboard/my-attendance' },
-        { icon: FileText, label: 'My Leave', path: '/dashboard/my-leave' },
-        { icon: Receipt, label: 'My Pay Slips', path: '/dashboard/my-payslips' },
-        { icon: TrendingUp, label: 'My Performance', path: '/dashboard/my-performance' },
-        { icon: Shield, label: 'Government Compliance', path: '/dashboard/compliance' },
+        { icon: FileText, label: 'My Leaves', path: '/dashboard/my-leave' },
+        { icon: DollarSign, label: 'My Pay Slips', path: '/dashboard/my-payslips' },
+        { icon: BarChart3, label: 'My Performance', path: '/dashboard/my-performance' },
+        { icon: Building2, label: 'Company Directory', path: '/dashboard/company-directory' },
+        { icon: HelpCircle, label: 'Help & Support', path: '/dashboard/help-support' },
     ];
 
     const moduleNav = [
-        { icon: UserCircle, label: 'Self-Service', path: '/dashboard/self-service' },
         { icon: Package, label: 'Asset Management', path: '/dashboard/assets' },
     ];
 
@@ -120,42 +119,58 @@ const Sidebar = () => {
             </nav>
 
             {/* User Section & Collapse */}
-            <button
-                onClick={() => setCollapsed(!collapsed)}
-                className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-xl text-emerald-200/60 hover:bg-white/8 hover:text-white transition-all text-xs font-medium"
-            >
-                {collapsed ? <ChevronRight className="w-4 h-4" /> : (
-                    <>
-                        <ChevronLeft className="w-4 h-4" />
-                        <span>Collapse</span>
-                    </>
-                )}
-            </button>
-            <div className="border-t border-white/10 p-3 space-y-2">
-                {!collapsed && (
-                    <div className="flex items-center gap-3 px-2 py-2 rounded-xl bg-white/5">
-                        <div className="w-8 h-8 rounded-full bg-emerald-500 flex items-center justify-center text-white text-xs font-bold flex-shrink-0 ring-2 ring-emerald-400/30">
-                            {role === 'admin' ? 'A' : 'U'}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                            <p className="text-white text-xs font-semibold truncate">
-                                {role === 'admin' ? 'Admin User' : 'Employee User'}
-                            </p>
-                            <p className="text-emerald-300/50 text-[10px] truncate">
-                                {role === 'admin' ? 'HR Administrator' : 'Employee'}
-                            </p>
-                        </div>
+            {role === 'admin' ? (
+                <>
+                    <button
+                        onClick={() => setCollapsed(!collapsed)}
+                        className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-xl text-emerald-200/60 hover:bg-white/8 hover:text-white transition-all text-xs font-medium"
+                    >
+                        {collapsed ? <ChevronRight className="w-4 h-4" /> : (
+                            <>
+                                <ChevronLeft className="w-4 h-4" />
+                                <span>Collapse</span>
+                            </>
+                        )}
+                    </button>
+                    <div className="border-t border-white/10 p-3 space-y-2">
+                        {!collapsed && (
+                            <div className="flex items-center gap-3 px-2 py-2 rounded-xl bg-white/5">
+                                <div className="w-8 h-8 rounded-full bg-emerald-500 flex items-center justify-center text-white text-xs font-bold flex-shrink-0 ring-2 ring-emerald-400/30">
+                                    A
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                    <p className="text-white text-xs font-semibold truncate">Admin User</p>
+                                    <p className="text-emerald-300/50 text-[10px] truncate">HR Administrator</p>
+                                </div>
+                            </div>
+                        )}
+                        <button
+                            onClick={handleLogout}
+                            className={`w-full flex items-center gap-2 px-3 py-2.5 rounded-xl border border-rose-500/30 text-white hover:bg-rose-500/20 hover:border-rose-500/50 transition-all text-sm font-semibold shadow-lg shadow-rose-950/20 ${collapsed ? 'justify-center px-0' : 'px-4'}`}
+                        >
+                            <LogOut className="w-[18px] h-[18px] text-rose-400 group-hover:text-rose-300" />
+                            {!collapsed && <span>Log Out</span>}
+                        </button>
                     </div>
-                )}
-
-                <button
-                    onClick={handleLogout}
-                    className={`w-full flex items-center gap-2 px-3 py-2.5 rounded-xl border border-rose-500/30 text-white hover:bg-rose-500/20 hover:border-rose-500/50 transition-all text-sm font-semibold shadow-lg shadow-rose-950/20 ${collapsed ? 'justify-center px-0' : 'px-4'}`}
-                >
-                    <LogOut className="w-[18px] h-[18px] text-rose-400 group-hover:text-rose-300" />
-                    {!collapsed && <span>Log Out</span>}
-                </button>
-            </div>
+                </>
+            ) : (
+                <div className="border-t border-white/10 p-3 space-y-2">
+                    <NavLink
+                        to="/dashboard"
+                        className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-emerald-100/70 hover:bg-white/8 hover:text-white transition-all text-sm font-medium"
+                    >
+                        <ArrowLeft className="w-[18px] h-[18px] text-emerald-200/60" />
+                        <span>Back to home</span>
+                    </NavLink>
+                    <button
+                        onClick={handleLogout}
+                        className="w-full flex items-center gap-2 px-4 py-2.5 rounded-xl border border-rose-500/30 text-white hover:bg-rose-500/20 hover:border-rose-500/50 transition-all text-sm font-semibold shadow-lg shadow-rose-950/20"
+                    >
+                        <LogOut className="w-[18px] h-[18px] text-rose-400" />
+                        <span>Log Out</span>
+                    </button>
+                </div>
+            )}
         </div>
     );
 };

@@ -27,10 +27,13 @@ import GovernmentCompliance from './pages/compliance/GovernmentCompliance';
 import EmployeeSelfService from './pages/self-service/EmployeeSelfService';
 import MyAttendance from './pages/self-service/MyAttendance';
 import MyLeave from './pages/self-service/MyLeave';
-// --- NEW IMPORTS ---
-import CompanyNews from './pages/self-service/CompanyNews';
-import MyPaySlips from './pages/self-service/MyPaySlips';
-import MyPerformance from './pages/self-service/MyPerformance';
+
+// User Pages
+import CompanyNews from './pages/user/CompanyNews';
+import MyPaySlips from './pages/user/MyPaySlips';
+import MyPerformance from './pages/user/MyPerformance';
+import CompanyDirectory from './pages/user/CompanyDirectory';
+import HelpSupport from './pages/user/HelpSupport';
 
 // Asset Management
 import AssetManagement from './pages/assets/AssetManagement';
@@ -86,11 +89,11 @@ function AppRoutes() {
         <Route path="my-attendance" element={<MyAttendance />} />
         <Route path="my-leave" element={<MyLeave />} />
         <Route path="self-service" element={<EmployeeSelfService />} />
-        
-        {/* --- NEW ROUTES --- */}
-        <Route path="news" element={<CompanyNews />} />
+        <Route path="company-news" element={<CompanyNews />} />
         <Route path="my-payslips" element={<MyPaySlips />} />
         <Route path="my-performance" element={<MyPerformance />} />
+        <Route path="company-directory" element={<CompanyDirectory />} />
+        <Route path="help-support" element={<HelpSupport />} />
       </Route>
 
       {/* Default Redirect */}
