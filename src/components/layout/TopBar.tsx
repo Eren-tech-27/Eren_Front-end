@@ -2,6 +2,7 @@ import { Bell, Search, ChevronRight, Check, Trash2 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import { useLeave } from '../../context/LeaveContext';
 
 const routeLabels: Record<string, string> = {
     '/dashboard': 'Dashboard',
@@ -20,8 +21,9 @@ const TopBar = () => {
     const [time, setTime] = useState(new Date());
     const location = useLocation();
     const { role } = useAuth();
+    const { notifications: leaveNotifications, markNotificationRead, clearNotifications } = useLeave();
     const [showNotifications, setShowNotifications] = useState(false);
-    const [notifications, setNotifications] = useState([
+    const [systemNotifications, setSystemNotifications] = useState([
         { id: 1, title: 'New Leave Request', message: 'Juan Dela Cruz submitted a leave request.', time: '2 mins ago', read: false, type: 'leave', path: '/dashboard/leave' },
         { id: 2, title: 'Payroll Processed', message: 'Payroll for Feb 1-15 has been successfully processed.', time: '1 hour ago', read: false, type: 'payroll', path: '/dashboard/payroll' },
         { id: 3, title: 'System Update', message: 'System maintenance at 12:00 AM.', time: '5 hours ago', read: true, type: 'system', path: '/dashboard/settings' },
@@ -36,18 +38,15 @@ const TopBar = () => {
             const newNotif = localStorage.getItem('attendance_notification');
             if (newNotif) {
                 const parsed = JSON.parse(newNotif);
-                setNotifications(prev => {
-                    // Prevent duplicate notifications if multiple tabs are open
+                setSystemNotifications(prev => {
                     if (prev.find(n => n.id === parsed.id)) return prev;
                     return [{ ...parsed, read: false, path: role === 'admin' ? '/dashboard/attendance' : '/dashboard/my-attendance' }, ...prev];
                 });
-                // Clear it so it doesn't re-trigger on next storage event
                 localStorage.removeItem('attendance_notification');
             }
         };
 
         window.addEventListener('storage', handleStorageChange);
-        // Also check immediately in case the event happened in this same tab
         const checkInterval = setInterval(handleStorageChange, 2000);
 
         return () => {
@@ -57,24 +56,59 @@ const TopBar = () => {
         };
     }, [role]);
 
-    const unreadCount = notifications.filter(n => !n.read).length;
+    // Merge system notifications + leave context notifications into one list
+    const leaveNotifsMapped = leaveNotifications.map(n => ({
+        id: n.id + 100000, // offset to avoid ID collisions
+        title: n.type === 'success' ? 'Leave Approved' : n.type === 'danger' ? 'Leave Denied' : 'Leave Update',
+        message: n.message,
+        time: n.timestamp,
+        read: n.read,
+        type: 'leave' as string,
+        path: '/dashboard/self-service',
+        isLeaveNotif: true,
+        originalId: n.id,
+    }));
+
+    const allNotifications = [...leaveNotifsMapped, ...systemNotifications].sort((a, b) => {
+        if (!a.read && b.read) return -1;
+        if (a.read && !b.read) return 1;
+        return 0;
+    });
+
+    const unreadCount = allNotifications.filter(n => !n.read).length;
 
     const markAllAsRead = () => {
-        setNotifications(notifications.map(n => ({ ...n, read: true })));
+        setSystemNotifications(prev => prev.map(n => ({ ...n, read: true })));
+        clearNotifications();
     };
 
     const markAsRead = (id: number, e: React.MouseEvent) => {
         e.stopPropagation();
-        setNotifications(notifications.map(n => n.id === id ? { ...n, read: true } : n));
+        const leaveNotif = leaveNotifsMapped.find(n => n.id === id);
+        if (leaveNotif) {
+            markNotificationRead(leaveNotif.originalId);
+        } else {
+            setSystemNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
+        }
     };
 
     const deleteNotification = (id: number, e: React.MouseEvent) => {
         e.stopPropagation();
-        setNotifications(notifications.filter(n => n.id !== id));
+        const leaveNotif = leaveNotifsMapped.find(n => n.id === id);
+        if (leaveNotif) {
+            markNotificationRead(leaveNotif.originalId);
+        } else {
+            setSystemNotifications(prev => prev.filter(n => n.id !== id));
+        }
     };
 
     const handleNotificationClick = (path: string, id: number) => {
-        setNotifications(notifications.map(n => n.id === id ? { ...n, read: true } : n));
+        const leaveNotif = leaveNotifsMapped.find(n => n.id === id);
+        if (leaveNotif) {
+            markNotificationRead(leaveNotif.originalId);
+        } else {
+            setSystemNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
+        }
         setShowNotifications(false);
         navigate(path);
     };
@@ -144,8 +178,8 @@ const TopBar = () => {
                                     </button>
                                 </div>
                                 <div className="max-h-[320px] overflow-y-auto">
-                                    {notifications.length > 0 ? (
-                                        notifications.map((n) => (
+                                    {allNotifications.length > 0 ? (
+                                        allNotifications.map((n) => (
                                             <div
                                                 key={n.id}
                                                 onClick={() => handleNotificationClick(n.path || '/dashboard', n.id)}

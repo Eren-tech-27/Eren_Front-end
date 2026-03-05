@@ -1,9 +1,11 @@
 import { useState } from 'react';
 import { CheckCircle, AlertTriangle, XCircle, Clock, Upload, X, Plus, Check, Edit, Trash2, Search } from 'lucide-react';
+import { useAttendance } from '../../context/AttendanceContext';
 
 type Tab = 'dtr' | 'overtime' | 'setup';
 
 const AttendanceTable = () => {
+    const { allRecords, setAllRecords } = useAttendance();
     const [activeTab, setActiveTab] = useState<Tab>('dtr');
     const [showUploadModal, setShowUploadModal] = useState(false);
     const [showOvertimeModal, setShowOvertimeModal] = useState(false);
@@ -11,7 +13,7 @@ const AttendanceTable = () => {
     const [showEditShiftModal, setShowEditShiftModal] = useState(false);
     const [editingShift, setEditingShift] = useState<any>(null);
     const [shiftForm, setShiftForm] = useState({ name: '', timeIn: '08:00', timeOut: '17:00', grace: '15', status: 'Active' });
-    
+
     // Search states for Employee Selection
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedEmployee, setSelectedEmployee] = useState<string | null>(null);
@@ -36,18 +38,12 @@ const AttendanceTable = () => {
         { label: 'Total Hours', value: '1,760', icon: Clock, gradient: 'linear-gradient(135deg, #6366f1, #818cf8)' },
     ];
 
-    // 1. DTR Records: State with mock data
-    const [dtrRecords, setDtrRecords] = useState([
-        { id: 'base-1', isLocal: false, empId: 'EMP-001', name: 'Dela Cruz, Juan', timeIn: '07:55 AM', timeOut: '05:01 PM', status: 'Present', late: '-', overtime: '0:01', remarks: '-' },
-        { id: 'base-2', isLocal: false, empId: 'EMP-002', name: 'Santos, Maria', timeIn: '08:15 AM', timeOut: '05:30 PM', status: 'Late', late: '15 min', overtime: '0:30', remarks: 'Traffic along EDSA' },
-        { id: 'base-3', isLocal: false, empId: 'EMP-003', name: 'Reyes, Jose', timeIn: '-', timeOut: '-', status: 'Absent', late: '-', overtime: '-', remarks: 'Sick leave' },
-        { id: 'base-4', isLocal: false, empId: 'EMP-004', name: 'Garcia, Ana', timeIn: '07:45 AM', timeOut: '06:00 PM', status: 'Present', late: '-', overtime: '1:00', remarks: '-' },
-        { id: 'base-5', isLocal: false, empId: 'EMP-005', name: 'Bautista, Pedro', timeIn: '08:05 AM', timeOut: '05:00 PM', status: 'Late', late: '5 min', overtime: '-', remarks: '-' },
-        { id: 'base-6', isLocal: false, empId: 'EMP-006', name: 'Fernandez, Rosa', timeIn: '07:50 AM', timeOut: '05:15 PM', status: 'Present', late: '-', overtime: '0:15', remarks: '-' },
-    ]);
+    // 1. DTR Records: from shared AttendanceContext (persisted in localStorage)
+    const dtrRecords = allRecords;
+    const setDtrRecords = setAllRecords;
 
-    const uniqueEmployees = Array.from(new Set(dtrRecords.map(r => r.name))).sort();
-    const filteredEmployees = uniqueEmployees.filter(emp => 
+    const uniqueEmployees = Array.from(new Set(dtrRecords.map(r => r.employee))).sort();
+    const filteredEmployees = uniqueEmployees.filter(emp =>
         emp.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
@@ -56,14 +52,15 @@ const AttendanceTable = () => {
         setShowEditRecordModal(true);
     };
 
+
     const handleSaveRecordEdit = () => {
-        setDtrRecords(prev => prev.map(r => r.id === editRecordForm.id ? editRecordForm : r));
+        setDtrRecords((prev: any[]) => prev.map(r => r.id === editRecordForm.id ? editRecordForm : r));
         setShowEditRecordModal(false);
     };
 
     const handleDeleteRecord = (record: any) => {
-        if (!window.confirm(`Are you sure you want to delete the attendance record for ${record.name}?`)) return;
-        setDtrRecords(prev => prev.filter(r => r.id !== record.id));
+        if (!window.confirm(`Are you sure you want to delete the attendance record for ${record.employee}?`)) return;
+        setDtrRecords((prev: any[]) => prev.filter(r => r.id !== record.id));
     };
 
     // 2. Overtime Requests: State with mock data
@@ -79,8 +76,8 @@ const AttendanceTable = () => {
         const [sh, sm] = start.split(':').map(Number);
         const [eh, em] = end.split(':').map(Number);
         let diffMinutes = (eh * 60 + em) - (sh * 60 + sm);
-        if (diffMinutes < 0) diffMinutes += 24 * 60; 
-        
+        if (diffMinutes < 0) diffMinutes += 24 * 60;
+
         const hours = (diffMinutes / 60).toFixed(1);
         return `${hours.replace('.0', '')} hours`;
     };
@@ -109,7 +106,7 @@ const AttendanceTable = () => {
 
     const handleOvertimeAction = (id: number, newStatus: string) => {
         if (window.confirm(`Are you sure you want to mark this request as ${newStatus}?`)) {
-            setOvertimeRequests(overtimeRequests.map((req: any) => 
+            setOvertimeRequests(overtimeRequests.map((req: any) =>
                 req.id === id ? { ...req, status: newStatus } : req
             ));
         }
@@ -151,31 +148,31 @@ const AttendanceTable = () => {
 
     const openEditShift = (shift: any) => {
         setEditingShift(shift);
-        setShiftForm({ 
-            name: shift.name, 
-            timeIn: shift.timeIn, 
-            timeOut: shift.timeOut, 
-            grace: String(shift.grace).replace(' min', ''), 
-            status: shift.status 
+        setShiftForm({
+            name: shift.name,
+            timeIn: shift.timeIn,
+            timeOut: shift.timeOut,
+            grace: String(shift.grace).replace(' min', ''),
+            status: shift.status
         });
         setShowEditShiftModal(true);
     };
 
     const handleAddShift = () => {
-        if(!shiftForm.name) {
+        if (!shiftForm.name) {
             alert("Please provide a shift name.");
             return;
         }
-        const newShift = { 
-            id: Date.now(), 
-            name: shiftForm.name, 
-            timeIn: shiftForm.timeIn, 
-            timeOut: shiftForm.timeOut, 
-            grace: shiftForm.grace + ' min', 
-            employees: 0, 
-            status: shiftForm.status 
+        const newShift = {
+            id: Date.now(),
+            name: shiftForm.name,
+            timeIn: shiftForm.timeIn,
+            timeOut: shiftForm.timeOut,
+            grace: shiftForm.grace + ' min',
+            employees: 0,
+            status: shiftForm.status
         };
-        
+
         setShifts([...shifts, newShift]);
         setShowAddShiftModal(false);
         setShiftForm({ name: '', timeIn: '08:00', timeOut: '17:00', grace: '15', status: 'Active' });
@@ -183,13 +180,13 @@ const AttendanceTable = () => {
 
     const handleEditShift = () => {
         if (!editingShift) return;
-        setShifts(shifts.map(s => s.id === editingShift.id ? { 
-            ...s, 
-            name: shiftForm.name, 
-            timeIn: shiftForm.timeIn, 
-            timeOut: shiftForm.timeOut, 
-            grace: shiftForm.grace + ' min', 
-            status: shiftForm.status 
+        setShifts(shifts.map(s => s.id === editingShift.id ? {
+            ...s,
+            name: shiftForm.name,
+            timeIn: shiftForm.timeIn,
+            timeOut: shiftForm.timeOut,
+            grace: shiftForm.grace + ' min',
+            status: shiftForm.status
         } : s));
 
         setShowEditShiftModal(false);
@@ -264,9 +261,9 @@ const AttendanceTable = () => {
                                     </thead>
                                     <tbody>
                                         {dtrRecords.map((r, i) => (
-                                            <tr key={i}>
+                                            <tr key={r.id || i}>
                                                 <td className="font-mono text-xs">{r.empId}</td>
-                                                <td className="!font-medium !text-gray-800">{r.name}</td>
+                                                <td className="!font-medium !text-gray-800">{r.employee}</td>
                                                 <td>{r.timeIn}</td>
                                                 <td>{r.timeOut}</td>
                                                 <td><span className={`badge ${statusBadge[r.status]}`}><span className="badge-dot" />{r.status}</span></td>
@@ -345,23 +342,23 @@ const AttendanceTable = () => {
                                                     <div className="flex gap-1">
                                                         {r.status === 'Pending' && (
                                                             <>
-                                                                <button 
-                                                                    onClick={() => handleOvertimeAction(r.id, 'Approved')} 
-                                                                    className="btn-ghost btn-icon text-emerald-600 hover:bg-emerald-50" 
+                                                                <button
+                                                                    onClick={() => handleOvertimeAction(r.id, 'Approved')}
+                                                                    className="btn-ghost btn-icon text-emerald-600 hover:bg-emerald-50"
                                                                     title="Approve">
                                                                     <Check className="w-4 h-4" />
                                                                 </button>
-                                                                <button 
-                                                                    onClick={() => handleOvertimeAction(r.id, 'Rejected')} 
-                                                                    className="btn-ghost btn-icon text-amber-500 hover:bg-amber-50" 
+                                                                <button
+                                                                    onClick={() => handleOvertimeAction(r.id, 'Rejected')}
+                                                                    className="btn-ghost btn-icon text-amber-500 hover:bg-amber-50"
                                                                     title="Reject">
                                                                     <X className="w-4 h-4" />
                                                                 </button>
                                                             </>
                                                         )}
-                                                        <button 
-                                                            onClick={() => handleDeleteOvertime(r.id)} 
-                                                            className="btn-ghost btn-icon text-rose-500 hover:bg-rose-50" 
+                                                        <button
+                                                            onClick={() => handleDeleteOvertime(r.id)}
+                                                            className="btn-ghost btn-icon text-rose-500 hover:bg-rose-50"
                                                             title="Delete">
                                                             <Trash2 className="w-4 h-4" />
                                                         </button>
@@ -438,30 +435,30 @@ const AttendanceTable = () => {
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
                                     <label className="pro-label">Time In</label>
-                                    <input 
-                                        type="text" 
-                                        value={editRecordForm.timeIn} 
-                                        onChange={e => setEditRecordForm({...editRecordForm, timeIn: e.target.value})} 
-                                        className="pro-input" 
+                                    <input
+                                        type="text"
+                                        value={editRecordForm.timeIn}
+                                        onChange={e => setEditRecordForm({ ...editRecordForm, timeIn: e.target.value })}
+                                        className="pro-input"
                                         placeholder="e.g. 08:00 AM"
                                     />
                                 </div>
                                 <div>
                                     <label className="pro-label">Time Out</label>
-                                    <input 
-                                        type="text" 
-                                        value={editRecordForm.timeOut} 
-                                        onChange={e => setEditRecordForm({...editRecordForm, timeOut: e.target.value})} 
-                                        className="pro-input" 
+                                    <input
+                                        type="text"
+                                        value={editRecordForm.timeOut}
+                                        onChange={e => setEditRecordForm({ ...editRecordForm, timeOut: e.target.value })}
+                                        className="pro-input"
                                         placeholder="e.g. 05:00 PM"
                                     />
                                 </div>
                             </div>
                             <div>
                                 <label className="pro-label">Status</label>
-                                <select 
-                                    value={editRecordForm.status} 
-                                    onChange={e => setEditRecordForm({...editRecordForm, status: e.target.value})} 
+                                <select
+                                    value={editRecordForm.status}
+                                    onChange={e => setEditRecordForm({ ...editRecordForm, status: e.target.value })}
                                     className="pro-select"
                                 >
                                     <option value="Present">Present</option>
@@ -471,10 +468,10 @@ const AttendanceTable = () => {
                             </div>
                             <div>
                                 <label className="pro-label">Remarks</label>
-                                <textarea 
+                                <textarea
                                     value={editRecordForm.remarks === '-' ? '' : editRecordForm.remarks}
-                                    onChange={e => setEditRecordForm({...editRecordForm, remarks: e.target.value})}
-                                    className="pro-input resize-none" 
+                                    onChange={e => setEditRecordForm({ ...editRecordForm, remarks: e.target.value })}
+                                    className="pro-input resize-none"
                                     rows={3}
                                     placeholder="Add or edit notes..."
                                 />
@@ -539,9 +536,9 @@ const AttendanceTable = () => {
                                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                         <Search className="h-4 w-4 text-gray-400" />
                                     </div>
-                                    <input 
-                                        type="text" 
-                                        className="pro-input !pl-10" 
+                                    <input
+                                        type="text"
+                                        className="pro-input !pl-10"
                                         placeholder="Search employee name..."
                                         value={searchTerm}
                                         onChange={(e) => {
@@ -553,8 +550,8 @@ const AttendanceTable = () => {
                                         <div className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-xl shadow-xl max-h-48 overflow-y-auto">
                                             {filteredEmployees.length > 0 ? (
                                                 filteredEmployees.map((emp) => (
-                                                    <div 
-                                                        key={emp} 
+                                                    <div
+                                                        key={emp}
                                                         className="px-4 py-2 hover:bg-emerald-50 cursor-pointer text-sm text-gray-700 flex items-center justify-between"
                                                         onClick={() => {
                                                             setSelectedEmployee(emp);
@@ -584,48 +581,48 @@ const AttendanceTable = () => {
 
                             <div>
                                 <label className="pro-label">Date</label>
-                                <input 
-                                    type="date" 
-                                    className="pro-input" 
-                                    value={overtimeForm.date} 
-                                    onChange={(e) => setOvertimeForm({ ...overtimeForm, date: e.target.value })} 
+                                <input
+                                    type="date"
+                                    className="pro-input"
+                                    value={overtimeForm.date}
+                                    onChange={(e) => setOvertimeForm({ ...overtimeForm, date: e.target.value })}
                                 />
                             </div>
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
                                     <label className="pro-label">Start Time</label>
-                                    <input 
-                                        type="time" 
-                                        className="pro-input" 
-                                        value={overtimeForm.startTime} 
-                                        onChange={(e) => setOvertimeForm({ ...overtimeForm, startTime: e.target.value })} 
+                                    <input
+                                        type="time"
+                                        className="pro-input"
+                                        value={overtimeForm.startTime}
+                                        onChange={(e) => setOvertimeForm({ ...overtimeForm, startTime: e.target.value })}
                                     />
                                 </div>
                                 <div>
                                     <label className="pro-label">End Time</label>
-                                    <input 
-                                        type="time" 
-                                        className="pro-input" 
-                                        value={overtimeForm.endTime} 
-                                        onChange={(e) => setOvertimeForm({ ...overtimeForm, endTime: e.target.value })} 
+                                    <input
+                                        type="time"
+                                        className="pro-input"
+                                        value={overtimeForm.endTime}
+                                        onChange={(e) => setOvertimeForm({ ...overtimeForm, endTime: e.target.value })}
                                     />
                                 </div>
                             </div>
                             <div>
                                 <label className="pro-label">Reason</label>
-                                <textarea 
-                                    rows={3} 
-                                    className="pro-input resize-none" 
-                                    placeholder="Describe reason for overtime..." 
-                                    value={overtimeForm.reason} 
-                                    onChange={(e) => setOvertimeForm({ ...overtimeForm, reason: e.target.value })} 
+                                <textarea
+                                    rows={3}
+                                    className="pro-input resize-none"
+                                    placeholder="Describe reason for overtime..."
+                                    value={overtimeForm.reason}
+                                    onChange={(e) => setOvertimeForm({ ...overtimeForm, reason: e.target.value })}
                                 />
                             </div>
                         </div>
                         <div className="pro-modal-footer">
                             <button onClick={() => { setShowOvertimeModal(false); setSelectedEmployee(null); setSearchTerm(''); }} className="btn btn-secondary">Cancel</button>
-                            <button 
-                                onClick={handleSubmitOvertimeRequest} 
+                            <button
+                                onClick={handleSubmitOvertimeRequest}
                                 className="btn btn-primary"
                                 disabled={!selectedEmployee}
                             >

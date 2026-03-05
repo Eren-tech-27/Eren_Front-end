@@ -1,7 +1,9 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { AttendanceProvider } from './context/AttendanceContext';
+import { LeaveProvider } from './context/LeaveContext';
 import Login from './pages/Login';
+import ForgotPassword from './pages/ForgotPassword';
 import Layout from './components/layout/Layout';
 import Dashboard from './pages/Dashboard';
 
@@ -43,14 +45,7 @@ import './App.css';
 
 // Route guard component that redirects user-role users away from admin-only pages
 const AdminOnly = ({ children }: { children: React.ReactNode }) => {
-  const { role, isLoggedIn } = useAuth();
-  
-  // Check if the user is logging out/not logged in first
-  if (!isLoggedIn) {
-    return <Navigate to="/login" replace />;
-  }
-
-  // Then check if they have admin privileges
+  const { role } = useAuth();
   if (role !== 'admin') {
     return <Navigate to="/dashboard" replace />;
   }
@@ -62,6 +57,7 @@ function AppRoutes() {
     <Routes>
       {/* Public Routes */}
       <Route path="/login" element={<Login />} />
+      <Route path="/forgot-password" element={<ForgotPassword />} />
 
       {/* Protected Routes */}
       <Route path="/dashboard" element={<Layout />}>
@@ -71,7 +67,7 @@ function AppRoutes() {
         <Route path="personal-records" element={<AdminOnly><EmployeeList /></AdminOnly>} />
         <Route path="employee/:id" element={<AdminOnly><EmployeeProfile /></AdminOnly>} />
         <Route path="attendance" element={<AdminOnly><AttendanceTable /></AdminOnly>} />
-        <Route path="leave" element={<AdminOnly><LeaveManagement /></AdminOnly>} /> 
+        <Route path="leave" element={<AdminOnly><LeaveManagement /></AdminOnly>} />
         <Route path="payroll" element={<AdminOnly><Payroll /></AdminOnly>} />
         <Route path="assets" element={<AdminOnly><AssetManagement /></AdminOnly>} />
         <Route path="clearance" element={<AdminOnly><ClearanceList /></AdminOnly>} />
@@ -81,7 +77,7 @@ function AppRoutes() {
 
         {/* Shared pages (both user and admin) */}
         <Route path="compliance" element={<GovernmentCompliance />} />
-        
+
         {/* Employee Self-Service Pages */}
         <Route path="my-attendance" element={<MyAttendance />} />
         <Route path="my-leave" element={<MyLeave />} />
@@ -99,9 +95,11 @@ function App() {
   return (
     <AuthProvider>
       <AttendanceProvider>
-        <Router>
-          <AppRoutes />
-        </Router>
+        <LeaveProvider>
+          <Router>
+            <AppRoutes />
+          </Router>
+        </LeaveProvider>
       </AttendanceProvider>
     </AuthProvider>
   );

@@ -1,10 +1,14 @@
-import { useState } from 'react';
-import { User, FileText, Calendar, Clock, Download, Eye, ChevronRight, CheckCircle2, Clock4, XCircle, Edit, X } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { User, FileText, Clock, Calendar, Download, Eye, Edit, ChevronRight } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { useLeave } from '../../context/LeaveContext';
+
+const CURRENT_USER = 'Dela Cruz, Juan';
 
 const EmployeeSelfService = () => {
-    // --- Mock Data ---
-    const [profile] = useState({
+    const navigate = useNavigate();
+    const { leaveRequests } = useLeave();
+
+    const profile = {
         name: 'Juan Dela Cruz',
         id: 'EMP-001',
         position: 'Admin Officer',
@@ -13,274 +17,198 @@ const EmployeeSelfService = () => {
         phone: '+63 912 345 6789',
         hireDate: 'January 15, 2024',
         status: 'Active',
-    });
-
-    const [recentPayslips] = useState([
-        { id: 1, period: 'Feb 1-15, 2026', netPay: '₱28,500', date: 'Feb 15, 2026' },
-        { id: 2, period: 'Jan 16-31, 2026', netPay: '₱28,500', date: 'Jan 31, 2026' },
-    ]);
-
-    const [recentAttendance] = useState([
-        { id: 1, date: 'Feb 18, 2026', timeIn: '07:55 AM', timeOut: '05:05 PM', status: 'On Time' },
-        { id: 2, date: 'Feb 17, 2026', timeIn: '08:10 AM', timeOut: '05:00 PM', status: 'Late' },
-        { id: 3, date: 'Feb 16, 2026', timeIn: '07:50 AM', timeOut: '05:15 PM', status: 'On Time' },
-    ]);
-
-    const [recentLeave] = useState([
-        { id: 1, type: 'Sick Leave', dates: 'Feb 12 - Feb 13, 2026', status: 'Approved' },
-        { id: 2, type: 'Vacation Leave', dates: 'Mar 01 - Mar 05, 2026', status: 'Pending' },
-    ]);
-
-    // --- State for Modal ---
-    const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-    const [editRequestText, setEditRequestText] = useState('');
-
-    // Helpers
-    const getStatusColor = (status: string) => {
-        switch (status) {
-            case 'On Time': return 'text-emerald-600 bg-emerald-50';
-            case 'Late': return 'text-rose-600 bg-rose-50';
-            case 'Approved': return 'text-emerald-600 bg-emerald-50';
-            case 'Pending': return 'text-amber-600 bg-amber-50';
-            case 'Rejected': return 'text-rose-600 bg-rose-50';
-            default: return 'text-gray-600 bg-gray-50';
-        }
     };
 
-    const getStatusIcon = (status: string) => {
-        switch (status) {
-            case 'Approved': return <CheckCircle2 className="w-4 h-4 text-emerald-500" />;
-            case 'Pending': return <Clock4 className="w-4 h-4 text-amber-500" />;
-            case 'Rejected': return <XCircle className="w-4 h-4 text-rose-500" />;
-            default: return null;
-        }
+    const recentAttendance = [
+        { date: 'Feb 18, 2026', time: '07:55 AM - 05:05 PM', status: 'On Time' },
+        { date: 'Feb 17, 2026', time: '08:10 AM - 05:00 PM', status: 'Late' },
+        { date: 'Feb 16, 2026', time: '07:50 AM - 05:15 PM', status: 'On Time' },
+    ];
+
+    // Get current user's recent leaves from shared context
+    const myLeaves = leaveRequests
+        .filter(r => r.employee === CURRENT_USER)
+        .slice(0, 2);
+
+    const payslips = [
+        { period: 'Feb 1-15, 2026', paidDate: 'Feb 15, 2026', amount: '₱28,500' },
+        { period: 'Jan 16-31, 2026', paidDate: 'Jan 31, 2026', amount: '₱28,500' },
+    ];
+
+    const statusBadge: Record<string, string> = {
+        Pending: 'badge-warning',
+        Approved: 'badge-success',
+        Rejected: 'badge-danger',
     };
 
-    const handleEditSubmit = (e: React.FormEvent) => {
-        e.preventDefault();
-        // TODO: Replace with actual API call to submit the request
-        alert(`Edit Request Submitted:\n${editRequestText}`);
-        setIsEditModalOpen(false);
-        setEditRequestText(''); // Clear the form
+    const attendanceBadgeColor: Record<string, string> = {
+        'On Time': '#059669',
+        'Late': '#dc2626',
     };
 
     return (
-        <div className="space-y-6 relative">
+        <div className="space-y-6">
+            {/* Header */}
             <div className="page-header animate-fade-in-up">
                 <h1>Employee Dashboard</h1>
                 <p>Welcome back! Here is a quick overview of your work details.</p>
             </div>
 
-            {/* Employee Banner Card */}
-            <div className="rounded-2xl overflow-hidden animate-fade-in-up shadow-lg" style={{ background: 'linear-gradient(135deg, #059669, #10b981, #34d399)', animationDelay: '0.1s', opacity: 0, animationFillMode: 'forwards' }}>
+            {/* Employee Banner */}
+            <div className="rounded-2xl overflow-hidden animate-fade-in-up" style={{ background: 'linear-gradient(135deg, #059669, #10b981, #34d399)', animationDelay: '0.1s', opacity: 0 }}>
                 <div className="p-6 flex items-center gap-5">
-                    <div className="w-16 h-16 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center text-white text-2xl font-bold border-2 border-white/30 shadow-inner">
-                        {profile.name.split(' ').map(n => n[0]).join('').substring(0, 2)}
+                    <div className="w-16 h-16 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center text-white text-2xl font-bold border-2 border-white/30">
+                        JD
                     </div>
                     <div>
-                        <h2 className="text-2xl font-bold text-white tracking-tight">{profile.name}</h2>
-                        <p className="text-emerald-50 font-medium mt-0.5">{profile.position} • {profile.department}</p>
-                        <span className="inline-flex items-center gap-1.5 mt-2 px-3 py-1 rounded-full text-xs font-bold bg-white/20 text-white backdrop-blur-md border border-white/10 shadow-sm">
-                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-300 animate-pulse" />{profile.status} Employee
+                        <h2 className="text-xl font-bold text-white">{profile.name}</h2>
+                        <p className="text-emerald-100 text-sm">{profile.position} • {profile.department}</p>
+                        <span className="inline-flex items-center gap-1.5 mt-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-white/20 text-white backdrop-blur-sm">
+                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-200 animate-pulse" />Active Employee
                         </span>
                     </div>
                 </div>
             </div>
 
-            {/* Dashboard Widgets Grid */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                
-                {/* WIDGET 1: Profile Summary */}
-                <div className="pro-card animate-fade-in-up" style={{ animationDelay: '0.2s', opacity: 0, animationFillMode: 'forwards' }}>
-                    <div className="p-5 border-b border-gray-100 flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                            <div className="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center">
-                                <User className="w-4 h-4" />
+            {/* Top Row: Profile Details + Recent Attendance */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 animate-fade-in-up" style={{ animationDelay: '0.2s', opacity: 0 }}>
+                {/* Profile Details */}
+                <div className="pro-card">
+                    <div className="p-5">
+                        <div className="flex items-center justify-between mb-5">
+                            <div className="flex items-center gap-2">
+                                <User className="w-4 h-4 text-emerald-600" />
+                                <h3 className="text-sm font-bold text-gray-800">Profile Details</h3>
                             </div>
-                            <h3 className="font-bold text-gray-800">Profile Details</h3>
+                            <button className="flex items-center gap-1 text-xs font-semibold text-emerald-600 hover:text-emerald-700 transition-colors">
+                                <Edit className="w-3.5 h-3.5" /> Request Edit
+                            </button>
                         </div>
-                        <button 
-                            onClick={() => setIsEditModalOpen(true)}
-                            className="text-xs font-bold text-blue-600 hover:text-blue-700 flex items-center gap-1.5 transition-colors bg-blue-50 hover:bg-blue-100 px-3 py-1.5 rounded-md"
-                        >
-                            <Edit className="w-3.5 h-3.5" /> Request Edit
-                        </button>
-                    </div>
-                    <div className="p-5 grid grid-cols-2 gap-4">
-                        <div>
-                            <p className="text-[11px] text-gray-400 font-semibold uppercase tracking-wider">Full Name</p>
-                            <p className="text-sm font-medium text-gray-800 mt-0.5">{profile.name}</p>
-                        </div>
-                        <div>
-                            <p className="text-[11px] text-gray-400 font-semibold uppercase tracking-wider">Employee ID</p>
-                            <p className="text-sm font-medium text-gray-800 mt-0.5">{profile.id}</p>
-                        </div>
-                        <div>
-                            <p className="text-[11px] text-gray-400 font-semibold uppercase tracking-wider">Position</p>
-                            <p className="text-sm font-medium text-gray-800 mt-0.5">{profile.position}</p>
-                        </div>
-                        <div>
-                            <p className="text-[11px] text-gray-400 font-semibold uppercase tracking-wider">Department</p>
-                            <p className="text-sm font-medium text-gray-800 mt-0.5">{profile.department}</p>
-                        </div>
-                        <div>
-                            <p className="text-[11px] text-gray-400 font-semibold uppercase tracking-wider">Status</p>
-                            <p className="text-sm font-medium text-gray-800 mt-0.5">{profile.status}</p>
-                        </div>
-                        <div>
-                            <p className="text-[11px] text-gray-400 font-semibold uppercase tracking-wider">Hire Date</p>
-                            <p className="text-sm font-medium text-gray-800 mt-0.5">{profile.hireDate}</p>
-                        </div>
-                        <div>
-                            <p className="text-[11px] text-gray-400 font-semibold uppercase tracking-wider">Email</p>
-                            <p className="text-sm font-medium text-gray-800 mt-0.5 truncate">{profile.email}</p>
-                        </div>
-                        <div>
-                            <p className="text-[11px] text-gray-400 font-semibold uppercase tracking-wider">Phone</p>
-                            <p className="text-sm font-medium text-gray-800 mt-0.5">{profile.phone}</p>
+                        <div className="grid grid-cols-2 gap-x-8 gap-y-4">
+                            <div>
+                                <p className="text-[10px] text-gray-400 uppercase tracking-wider font-semibold mb-1">Full Name</p>
+                                <p className="text-sm font-semibold text-gray-800">{profile.name}</p>
+                            </div>
+                            <div>
+                                <p className="text-[10px] text-gray-400 uppercase tracking-wider font-semibold mb-1">Employee ID</p>
+                                <p className="text-sm font-semibold text-gray-800">{profile.id}</p>
+                            </div>
+                            <div>
+                                <p className="text-[10px] text-gray-400 uppercase tracking-wider font-semibold mb-1">Position</p>
+                                <p className="text-sm font-semibold text-gray-800">{profile.position}</p>
+                            </div>
+                            <div>
+                                <p className="text-[10px] text-gray-400 uppercase tracking-wider font-semibold mb-1">Department</p>
+                                <p className="text-sm font-semibold text-gray-800">{profile.department}</p>
+                            </div>
+                            <div>
+                                <p className="text-[10px] text-gray-400 uppercase tracking-wider font-semibold mb-1">Status</p>
+                                <p className="text-sm font-semibold text-gray-800">{profile.status}</p>
+                            </div>
+                            <div>
+                                <p className="text-[10px] text-gray-400 uppercase tracking-wider font-semibold mb-1">Hire Date</p>
+                                <p className="text-sm font-semibold text-gray-800">{profile.hireDate}</p>
+                            </div>
+                            <div>
+                                <p className="text-[10px] text-gray-400 uppercase tracking-wider font-semibold mb-1">Email</p>
+                                <p className="text-sm font-semibold text-gray-800">{profile.email}</p>
+                            </div>
+                            <div>
+                                <p className="text-[10px] text-gray-400 uppercase tracking-wider font-semibold mb-1">Phone</p>
+                                <p className="text-sm font-semibold text-gray-800">{profile.phone}</p>
+                            </div>
                         </div>
                     </div>
                 </div>
 
-                {/* WIDGET 2: Recent Attendance */}
-                <div className="pro-card animate-fade-in-up flex flex-col" style={{ animationDelay: '0.3s', opacity: 0, animationFillMode: 'forwards' }}>
-                    <div className="p-5 border-b border-gray-100 flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                            <div className="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center">
-                                <Clock className="w-4 h-4" />
+                {/* Recent Attendance */}
+                <div className="pro-card">
+                    <div className="p-5">
+                        <div className="flex items-center justify-between mb-5">
+                            <div className="flex items-center gap-2">
+                                <Clock className="w-4 h-4 text-emerald-600" />
+                                <h3 className="text-sm font-bold text-gray-800">Recent Attendance</h3>
                             </div>
-                            <h3 className="font-bold text-gray-800">Recent Attendance</h3>
+                            <button onClick={() => navigate('/dashboard/my-attendance')} className="flex items-center gap-0.5 text-xs font-semibold text-emerald-600 hover:text-emerald-700 transition-colors">
+                                View Log <ChevronRight className="w-3.5 h-3.5" />
+                            </button>
                         </div>
-                        <Link to="/dashboard/my-attendance" className="text-xs font-bold text-emerald-600 hover:text-emerald-700 flex items-center gap-1 transition-colors">
-                            View Log <ChevronRight className="w-3 h-3" />
-                        </Link>
-                    </div>
-                    <div className="p-0 flex-1 flex flex-col">
-                        {recentAttendance.map((record, index) => (
-                            <div key={record.id} className={`px-5 py-3.5 flex items-center justify-between ${index !== recentAttendance.length - 1 ? 'border-b border-gray-50' : ''} hover:bg-gray-50/50 transition-colors`}>
-                                <div>
-                                    <p className="text-sm font-bold text-gray-800">{record.date}</p>
-                                    <p className="text-xs text-gray-500 mt-0.5">{record.timeIn} - {record.timeOut}</p>
+                        <div className="space-y-4">
+                            {recentAttendance.map((entry, i) => (
+                                <div key={i} className="flex items-center justify-between py-2 border-b border-gray-50 last:border-0">
+                                    <div>
+                                        <p className="text-sm font-semibold text-gray-800">{entry.date}</p>
+                                        <p className="text-xs text-gray-400 mt-0.5">{entry.time}</p>
+                                    </div>
+                                    <span className="text-xs font-bold" style={{ color: attendanceBadgeColor[entry.status] }}>
+                                        {entry.status}
+                                    </span>
                                 </div>
-                                <span className={`px-2.5 py-1 rounded-md text-[11px] font-bold ${getStatusColor(record.status)}`}>
-                                    {record.status}
-                                </span>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-
-                {/* WIDGET 3: Recent Leave Requests */}
-                <div className="pro-card animate-fade-in-up flex flex-col" style={{ animationDelay: '0.4s', opacity: 0, animationFillMode: 'forwards' }}>
-                    <div className="p-5 border-b border-gray-100 flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                            <div className="w-8 h-8 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center">
-                                <Calendar className="w-4 h-4" />
-                            </div>
-                            <h3 className="font-bold text-gray-800">Leave History</h3>
+                            ))}
                         </div>
-                        <Link to="/dashboard/my-leave" className="text-xs font-bold text-emerald-600 hover:text-emerald-700 flex items-center gap-1 transition-colors">
-                            Manage Leave <ChevronRight className="w-3 h-3" />
-                        </Link>
-                    </div>
-                    <div className="p-0 flex-1 flex flex-col">
-                        {recentLeave.map((leave, index) => (
-                            <div key={leave.id} className={`px-5 py-3.5 flex items-center justify-between ${index !== recentLeave.length - 1 ? 'border-b border-gray-50' : ''} hover:bg-gray-50/50 transition-colors`}>
-                                <div>
-                                    <p className="text-sm font-bold text-gray-800">{leave.type}</p>
-                                    <p className="text-xs text-gray-500 mt-0.5">{leave.dates}</p>
-                                </div>
-                                <div className="flex items-center gap-1.5">
-                                    {getStatusIcon(leave.status)}
-                                    <span className="text-xs font-semibold text-gray-700">{leave.status}</span>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-
-                {/* WIDGET 4: Recent Payslips */}
-                <div className="pro-card animate-fade-in-up flex flex-col" style={{ animationDelay: '0.5s', opacity: 0, animationFillMode: 'forwards' }}>
-                    <div className="p-5 border-b border-gray-100 flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                            <div className="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center">
-                                <FileText className="w-4 h-4" />
-                            </div>
-                            <h3 className="font-bold text-gray-800">Recent Payslips</h3>
-                        </div>
-                    </div>
-                    <div className="p-0 flex-1 flex flex-col">
-                        {recentPayslips.map((payslip, index) => (
-                            <div key={payslip.id} className={`px-5 py-3.5 flex items-center justify-between ${index !== recentPayslips.length - 1 ? 'border-b border-gray-50' : ''} hover:bg-gray-50/50 transition-colors`}>
-                                <div>
-                                    <p className="text-sm font-bold text-gray-800">{payslip.period}</p>
-                                    <p className="text-xs text-gray-500 mt-0.5">Paid: {payslip.date}</p>
-                                </div>
-                                <div className="flex items-center gap-2">
-                                    <p className="text-sm font-bold text-emerald-600 mr-2">{payslip.netPay}</p>
-                                    <button className="p-1.5 text-blue-500 hover:bg-blue-50 rounded-lg transition-colors" title="View"><Eye className="w-4 h-4" /></button>
-                                    <button className="p-1.5 text-gray-400 hover:bg-gray-100 rounded-lg transition-colors" title="Download"><Download className="w-4 h-4" /></button>
-                                </div>
-                            </div>
-                        ))}
                     </div>
                 </div>
             </div>
 
-            {/* --- Edit Request Modal Overlay --- */}
-            {isEditModalOpen && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/50 backdrop-blur-sm animate-fade-in">
-                    <div className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden transform transition-all">
-                        <div className="p-5 border-b border-gray-100 flex items-center justify-between bg-gray-50/50">
-                            <h3 className="font-bold text-gray-800 text-lg flex items-center gap-2">
-                                <Edit className="w-5 h-5 text-blue-600" /> Request Profile Edit
-                            </h3>
-                            <button 
-                                onClick={() => setIsEditModalOpen(false)}
-                                className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
-                            >
-                                <X className="w-5 h-5" />
+            {/* Bottom Row: Leave History + Recent Payslips */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 animate-fade-in-up" style={{ animationDelay: '0.3s', opacity: 0 }}>
+                {/* Leave History */}
+                <div className="pro-card">
+                    <div className="p-5">
+                        <div className="flex items-center justify-between mb-5">
+                            <div className="flex items-center gap-2">
+                                <Calendar className="w-4 h-4 text-emerald-600" />
+                                <h3 className="text-sm font-bold text-gray-800">Leave History</h3>
+                            </div>
+                            <button onClick={() => navigate('/dashboard/my-leave')} className="flex items-center gap-0.5 text-xs font-semibold text-emerald-600 hover:text-emerald-700 transition-colors">
+                                Manage Leave <ChevronRight className="w-3.5 h-3.5" />
                             </button>
                         </div>
-                        
-                        <form onSubmit={handleEditSubmit} className="p-6">
-                            <div className="mb-5">
-                                <label htmlFor="editRequest" className="block text-sm font-semibold text-gray-700 mb-2">
-                                    What details need to be updated?
-                                </label>
-                                <p className="text-xs text-gray-500 mb-3">
-                                    Please specify which fields are incorrect and provide the correct information. Your request will be sent to HR for approval.
-                                </p>
-                                <textarea
-                                    id="editRequest"
-                                    rows={4}
-                                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all text-sm text-gray-800 resize-none"
-                                    placeholder="Example: My phone number has changed to +63 999 888 7777..."
-                                    value={editRequestText}
-                                    onChange={(e) => setEditRequestText(e.target.value)}
-                                    required
-                                />
-                            </div>
-                            
-                            <div className="flex items-center justify-end gap-3 pt-2">
-                                <button
-                                    type="button"
-                                    onClick={() => setIsEditModalOpen(false)}
-                                    className="px-4 py-2.5 text-sm font-bold text-gray-600 hover:bg-gray-100 rounded-xl transition-colors"
-                                >
-                                    Cancel
-                                </button>
-                                <button
-                                    type="submit"
-                                    className="px-4 py-2.5 text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-xl transition-colors shadow-sm"
-                                >
-                                    Submit Request
-                                </button>
-                            </div>
-                        </form>
+                        <div className="space-y-4">
+                            {myLeaves.length > 0 ? myLeaves.map((leave) => (
+                                <div key={leave.id} className="flex items-center justify-between py-2 border-b border-gray-50 last:border-0">
+                                    <div>
+                                        <p className="text-sm font-bold text-gray-800">{leave.leaveType}</p>
+                                        <p className="text-xs text-gray-400 mt-0.5">{leave.startDate} - {leave.endDate}</p>
+                                    </div>
+                                    <span className={`badge ${statusBadge[leave.status]}`}>
+                                        <span className="badge-dot" />{leave.status}
+                                    </span>
+                                </div>
+                            )) : (
+                                <p className="text-sm text-gray-400 italic">No leave records found.</p>
+                            )}
+                        </div>
                     </div>
                 </div>
-            )}
+
+                {/* Recent Payslips */}
+                <div className="pro-card">
+                    <div className="p-5">
+                        <div className="flex items-center justify-between mb-5">
+                            <div className="flex items-center gap-2">
+                                <FileText className="w-4 h-4 text-emerald-600" />
+                                <h3 className="text-sm font-bold text-gray-800">Recent Payslips</h3>
+                            </div>
+                        </div>
+                        <div className="space-y-4">
+                            {payslips.map((slip, i) => (
+                                <div key={i} className="flex items-center justify-between py-2 border-b border-gray-50 last:border-0">
+                                    <div>
+                                        <p className="text-sm font-bold text-gray-800">{slip.period}</p>
+                                        <p className="text-xs text-gray-400 mt-0.5">Paid: {slip.paidDate}</p>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <span className="text-sm font-bold text-emerald-600">{slip.amount}</span>
+                                        <button className="btn-ghost btn-icon text-blue-500 hover:bg-blue-50" title="View"><Eye className="w-4 h-4" /></button>
+                                        <button className="btn-ghost btn-icon text-gray-400 hover:bg-gray-100" title="Download"><Download className="w-4 h-4" /></button>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     );
 };

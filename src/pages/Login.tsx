@@ -1,6 +1,6 @@
 import { useState, type FC, type FormEvent } from 'react';
 import { User, Lock, Eye, EyeOff, ArrowRight, Shield } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useAuth, type UserRole } from '../context/AuthContext';
 
 import logo from '../assets/logo.svg';
@@ -134,9 +134,9 @@ const Login: FC = () => {
                                     <input type="checkbox" className="w-3.5 h-3.5 rounded border-white/30 bg-white/10 text-emerald-500 focus:ring-emerald-400/30" />
                                     <span className="text-xs text-emerald-200/60">Remember me</span>
                                 </label>
-                                <a href="#" className="text-xs font-medium text-emerald-300/70 hover:text-emerald-200 transition-colors">
+                                <Link to="/forgot-password" className="text-xs font-medium text-emerald-300/70 hover:text-emerald-200 transition-colors">
                                     Forgot Password?
-                                </a>
+                                </Link>
                             </div>
 
                             {/* Login Button */}

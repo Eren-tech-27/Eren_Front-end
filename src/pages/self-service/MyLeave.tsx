@@ -1,27 +1,28 @@
 import { useState } from 'react';
-import { Calendar, Plus, X, User } from 'lucide-react';
+import { Calendar, Plus, X, User, Clock, CheckCircle, Info } from 'lucide-react';
+import { useLeave } from '../../context/LeaveContext';
 
-type LeaveStatus = 'Pending' | 'Approved' | 'Rejected';
+const CURRENT_USER = 'Dela Cruz, Juan';
 
 const MyLeave = () => {
-    const [myLeaveBalances] = useState({
-        vacation: { total: 15, used: 5, remaining: 10 },
-        sick: { total: 15, used: 3, remaining: 12 },
-        emergency: { total: 5, used: 1, remaining: 4 },
-    });
-
-    const [myLeaveRequests, setMyLeaveRequests] = useState([
-        { id: 1, leaveType: 'Vacation Leave', startDate: '2026-02-26', endDate: '2026-02-28', days: 3, status: 'Pending' as LeaveStatus, reason: 'Family trip' },
-        { id: 2, leaveType: 'Sick Leave', startDate: '2026-03-05', endDate: '2026-03-05', days: 1, status: 'Pending' as LeaveStatus, reason: 'Medical Checkup' },
-    ]);
-
-    const [myLeaveHistory] = useState([
-        { id: 1, dateApplied: '2026-02-15', leaveType: 'Vacation Leave', duration: '3 days', status: 'Approved' as LeaveStatus, approver: 'HR Admin' },
-        { id: 2, dateApplied: '2026-01-10', leaveType: 'Sick Leave', duration: '2 days', status: 'Approved' as LeaveStatus, approver: 'Direct Manager' },
-    ]);
+    const { leaveRequests, submitLeaveRequest } = useLeave();
 
     const [showApplyModal, setShowApplyModal] = useState(false);
     const [applyForm, setApplyForm] = useState({ leaveType: 'Vacation Leave', startDate: '', endDate: '', reason: '' });
+    const [activeSection, setActiveSection] = useState<'requests' | 'history'>('requests');
+
+    // Filter to only show current user's data
+    const myRequests = leaveRequests.filter(r => r.employee === CURRENT_USER);
+    const myPendingRequests = myRequests.filter(r => r.status === 'Pending');
+    const myHistoryRequests = myRequests.filter(r => r.status === 'Approved' || r.status === 'Rejected');
+
+
+    // User's leave balances
+    const myLeaveBalances = {
+        vacation: { total: 15, used: 5, remaining: 10 },
+        sick: { total: 15, used: 3, remaining: 12 },
+        emergency: { total: 5, used: 1, remaining: 4 },
+    };
 
     const statusBadge: Record<string, string> = {
         Pending: 'badge-warning',
@@ -34,30 +35,30 @@ const MyLeave = () => {
             alert("Please select start and end dates.");
             return;
         }
-        
-        const diffTime = Math.abs(new Date(applyForm.endDate).getTime() - new Date(applyForm.startDate).getTime());
-        const days = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1; 
 
-        const newRequest = {
-            id: Date.now(),
+        const diffTime = Math.abs(new Date(applyForm.endDate).getTime() - new Date(applyForm.startDate).getTime());
+        const days = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+
+        submitLeaveRequest({
+            employee: CURRENT_USER,
             leaveType: applyForm.leaveType,
             startDate: applyForm.startDate,
             endDate: applyForm.endDate,
             days: days > 0 ? days : 0,
-            status: 'Pending' as LeaveStatus,
-            reason: applyForm.reason
-        };
+            reason: applyForm.reason,
+        });
 
-        setMyLeaveRequests([newRequest, ...myLeaveRequests]);
         setShowApplyModal(false);
         setApplyForm({ leaveType: 'Vacation Leave', startDate: '', endDate: '', reason: '' });
     };
 
     return (
         <div className="space-y-6">
-            <div className="page-header animate-fade-in-up">
-                <h1>My Leave</h1>
-                <p>Manage your leave balances, view history, and submit new requests</p>
+            <div className="flex justify-between items-center animate-fade-in-up">
+                <div className="page-header" style={{ marginBottom: 0 }}>
+                    <h1>My Leave</h1>
+                    <p>Manage your leave balances, view history, and submit new requests</p>
+                </div>
             </div>
 
             <div className="space-y-8 animate-fade-in-up" style={{ animationDelay: '0.1s' }}>
@@ -95,36 +96,121 @@ const MyLeave = () => {
                     </div>
                 </div>
 
-                {/* Pending Requests Section */}
-                <div className="pro-card p-6">
-                    <h3 className="text-base font-bold text-gray-800 mb-4">Pending Requests</h3>
-                    <div className="overflow-x-auto rounded-xl border border-gray-100">
-                        <table className="pro-table w-full">
-                            <thead>
-                                <tr>
-                                    {['Leave Type', 'Start Date', 'End Date', 'Days', 'Reason', 'Status'].map(h => <th key={h}>{h}</th>)}
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {myLeaveRequests.length > 0 ? myLeaveRequests.map((r) => (
-                                    <tr key={r.id}>
-                                        <td className="!font-medium">{r.leaveType}</td>
-                                        <td>{r.startDate}</td>
-                                        <td>{r.endDate}</td>
-                                        <td className="font-semibold">{r.days}</td>
-                                        <td className="text-gray-500 text-xs max-w-[150px] truncate" title={r.reason}>{r.reason || '-'}</td>
-                                        <td><span className={`badge ${statusBadge[r.status]}`}><span className="badge-dot" />{r.status}</span></td>
-                                    </tr>
-                                )) : (
-                                    <tr><td colSpan={6} className="text-center py-6 text-gray-400 italic">No pending requests.</td></tr>
+                {/* Section Toggle Tabs */}
+                <div className="pro-card">
+                    <div className="px-6 pt-4">
+                        <div className="pro-tabs">
+                            <button
+                                onClick={() => setActiveSection('requests')}
+                                className={`pro-tab flex items-center gap-2 ${activeSection === 'requests' ? 'active' : ''}`}
+                            >
+                                <Clock className="w-4 h-4" />
+                                My Requests
+                                {myPendingRequests.length > 0 && (
+                                    <span className="ml-1 px-1.5 py-0.5 text-[10px] font-bold bg-amber-100 text-amber-700 rounded-full">
+                                        {myPendingRequests.length}
+                                    </span>
                                 )}
-                            </tbody>
-                        </table>
+                            </button>
+                            <button
+                                onClick={() => setActiveSection('history')}
+                                className={`pro-tab flex items-center gap-2 ${activeSection === 'history' ? 'active' : ''}`}
+                            >
+                                <CheckCircle className="w-4 h-4" />
+                                Leave History
+                            </button>
+                        </div>
+                    </div>
+
+                    <div className="p-6">
+                        {/* My Requests Section */}
+                        {activeSection === 'requests' && (
+                            <div>
+                                <div className="flex items-start gap-2.5 mb-4 p-3 bg-blue-50 rounded-xl border border-blue-100">
+                                    <Info className="w-4 h-4 text-blue-500 mt-0.5 flex-shrink-0" />
+                                    <p className="text-xs text-blue-600">
+                                        Only your own leave requests are shown here. Other employees' leave information is not visible for privacy reasons.
+                                    </p>
+                                </div>
+                                <div className="overflow-x-auto rounded-xl border border-gray-100">
+                                    <table className="pro-table w-full">
+                                        <thead>
+                                            <tr>
+                                                {['Leave Type', 'Start Date', 'End Date', 'Days', 'Reason', 'Status'].map(h => <th key={h}>{h}</th>)}
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {myRequests.length > 0 ? myRequests.map((r) => (
+                                                <tr key={r.id}>
+                                                    <td className="!font-medium">{r.leaveType}</td>
+                                                    <td>{r.startDate}</td>
+                                                    <td>{r.endDate}</td>
+                                                    <td className="font-semibold">{r.days}</td>
+                                                    <td className="text-gray-500 text-xs max-w-[150px] truncate" title={r.reason}>{r.reason || '-'}</td>
+                                                    <td>
+                                                        <div className="flex items-center gap-1.5">
+                                                            <span className={`badge ${statusBadge[r.status]}`}>
+                                                                <span className="badge-dot" />{r.status}
+                                                            </span>
+                                                            {r.status === 'Pending' && (
+                                                                <span className="text-[10px] text-amber-600 font-medium whitespace-nowrap">
+                                                                    Awaiting Approval
+                                                                </span>
+                                                            )}
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            )) : (
+                                                <tr><td colSpan={6} className="text-center py-6 text-gray-400 italic">No leave requests yet.</td></tr>
+                                            )}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Leave History Section */}
+                        {activeSection === 'history' && (
+                            <div>
+                                <div className="flex items-start gap-2.5 mb-4 p-3 bg-emerald-50 rounded-xl border border-emerald-100">
+                                    <CheckCircle className="w-4 h-4 text-emerald-500 mt-0.5 flex-shrink-0" />
+                                    <p className="text-xs text-emerald-600">
+                                        Your leave history showing only finalized (approved or rejected) requests.
+                                    </p>
+                                </div>
+                                <div className="overflow-x-auto rounded-xl border border-gray-100">
+                                    <table className="pro-table w-full">
+                                        <thead>
+                                            <tr>
+                                                {['Leave Type', 'Start Date', 'End Date', 'Days', 'Status'].map(h => <th key={h}>{h}</th>)}
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {myHistoryRequests.length > 0 ? myHistoryRequests.map((r) => (
+                                                <tr key={r.id}>
+                                                    <td className="!font-medium">{r.leaveType}</td>
+                                                    <td>{r.startDate}</td>
+                                                    <td>{r.endDate}</td>
+                                                    <td className="font-semibold">{r.days}</td>
+                                                    <td>
+                                                        <span className={`badge ${statusBadge[r.status]}`}>
+                                                            <span className="badge-dot" />{r.status}
+                                                        </span>
+                                                    </td>
+                                                </tr>
+                                            )) : (
+                                                <tr><td colSpan={5} className="text-center py-6 text-gray-400 italic">No leave history yet.</td></tr>
+                                            )}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        )}
                     </div>
                 </div>
             </div>
 
-            {/* Application Modal (Employee Only) */}
+            {/* Application Modal */}
             {showApplyModal && (
                 <div className="pro-modal-overlay">
                     <div className="pro-modal max-w-md" onClick={e => e.stopPropagation()}>
@@ -135,12 +221,12 @@ const MyLeave = () => {
                         <div className="pro-modal-body space-y-4">
                             <div className="bg-emerald-50 text-emerald-800 text-sm px-4 py-3 rounded-lg flex items-center gap-2 border border-emerald-100">
                                 <User className="w-4 h-4" />
-                                Applying as: <strong>Juan Dela Cruz</strong>
+                                Applying as: <strong>{CURRENT_USER}</strong>
                             </div>
 
                             <div>
                                 <label className="pro-label">Leave Type</label>
-                                <select className="pro-select" value={applyForm.leaveType} onChange={(e) => setApplyForm({...applyForm, leaveType: e.target.value})}>
+                                <select className="pro-select" value={applyForm.leaveType} onChange={(e) => setApplyForm({ ...applyForm, leaveType: e.target.value })}>
                                     <option>Vacation Leave</option>
                                     <option>Sick Leave</option>
                                     <option>Emergency Leave</option>
@@ -149,16 +235,23 @@ const MyLeave = () => {
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
                                     <label className="pro-label">Start Date</label>
-                                    <input type="date" className="pro-input" value={applyForm.startDate} onChange={(e) => setApplyForm({...applyForm, startDate: e.target.value})} />
+                                    <input type="date" className="pro-input" value={applyForm.startDate} onChange={(e) => setApplyForm({ ...applyForm, startDate: e.target.value })} />
                                 </div>
                                 <div>
                                     <label className="pro-label">End Date</label>
-                                    <input type="date" className="pro-input" value={applyForm.endDate} onChange={(e) => setApplyForm({...applyForm, endDate: e.target.value})} />
+                                    <input type="date" className="pro-input" value={applyForm.endDate} onChange={(e) => setApplyForm({ ...applyForm, endDate: e.target.value })} />
                                 </div>
                             </div>
                             <div>
                                 <label className="pro-label">Reason</label>
-                                <textarea rows={3} className="pro-input resize-none" placeholder="Brief reason for leave..." value={applyForm.reason} onChange={(e) => setApplyForm({...applyForm, reason: e.target.value})} />
+                                <textarea rows={3} className="pro-input resize-none" placeholder="Brief reason for leave..." value={applyForm.reason} onChange={(e) => setApplyForm({ ...applyForm, reason: e.target.value })} />
+                            </div>
+
+                            <div className="flex items-start gap-2 p-2.5 bg-gray-50 rounded-lg border border-gray-100">
+                                <Info className="w-3.5 h-3.5 text-gray-400 mt-0.5 flex-shrink-0" />
+                                <p className="text-[11px] text-gray-400">
+                                    Your leave request will be sent to HR admin for review. It will not be visible to other employees.
+                                </p>
                             </div>
                         </div>
                         <div className="pro-modal-footer">

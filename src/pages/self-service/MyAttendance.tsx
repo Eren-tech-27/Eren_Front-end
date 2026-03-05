@@ -4,12 +4,13 @@ import { useAttendance } from '../../context/AttendanceContext';
 
 const MyAttendance = () => {
     const [currentTime, setCurrentTime] = useState(new Date());
-    
-    const { 
-        attendanceForm, setAttendanceForm, 
-        punchedIn, setPunchedIn, 
-        punchedOut, setPunchedOut, 
-        myAttendance, setMyAttendance 
+
+    const {
+        attendanceForm, setAttendanceForm,
+        punchedIn, setPunchedIn,
+        punchedOut, setPunchedOut,
+        myAttendance, setMyAttendance,
+        allRecords, setAllRecords,
     } = useAttendance();
 
     // Live Clock Timer
@@ -50,13 +51,21 @@ const MyAttendance = () => {
             timeIn: attendanceForm.timeIn,
             timeOut: attendanceForm.timeOut || '--:--',
             status: 'Present',
-            hours: '8.0', // Mock calculation
-            remarks: attendanceForm.remarks
+            hours: '8.0',
+            remarks: attendanceForm.remarks || '-',
+            employee: 'Dela Cruz, Juan',
+            empId: 'EMP-001',
+            late: '-',
+            overtime: attendanceForm.overtime !== '0' ? attendanceForm.overtime + 'h' : '-',
         };
 
+        // Save to user's own logs
         setMyAttendance([newLog, ...myAttendance]);
+        // Also save to admin's shared records so they can see it
+        setAllRecords([newLog, ...allRecords]);
+
         alert('Attendance log submitted successfully!');
-        
+
         setAttendanceForm({ timeIn: '', timeOut: '', overtime: '0', remarks: '' });
         setPunchedIn(false);
         setPunchedOut(false);
@@ -171,9 +180,9 @@ const MyAttendance = () => {
             <div className="pro-card overflow-hidden animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
                 <div className="p-4 border-b border-gray-50 bg-gray-100/30 flex justify-between items-center">
                     <h3 className="text-sm font-bold text-gray-800">Recent Logs</h3>
-                    
+
                     {myAttendance.length > 0 && (
-                        <button 
+                        <button
                             onClick={handleClearLogs}
                             className="flex items-center gap-1 text-xs font-semibold text-rose-500 hover:text-rose-600 transition-colors bg-rose-50 px-3 py-1.5 rounded-lg"
                         >

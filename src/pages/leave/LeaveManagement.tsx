@@ -1,29 +1,32 @@
 import { useState } from 'react';
-import { Clock, CheckCircle, XCircle, AlertTriangle, Plus, X, Calendar, Search, Edit, Trash2 } from 'lucide-react';
+import { Clock, CheckCircle, XCircle, AlertTriangle, X, Calendar, Edit, Trash2, CheckSquare, Ban } from 'lucide-react';
+import { useLeave } from '../../context/LeaveContext';
+import type { LeaveRequest } from '../../context/LeaveContext';
 
 type Tab = 'request' | 'balance' | 'history';
-type LeaveStatus = 'Pending' | 'Approved' | 'Rejected';
 
 const LeaveManagement = () => {
+    const {
+        leaveRequests,
+        leaveHistory,
+        leaveBalances,
+        approveRequest,
+        rejectRequest,
+        deleteRequest,
+    } = useLeave();
+
     const [activeTab, setActiveTab] = useState<Tab>('request');
-    const [showApplyModal, setShowApplyModal] = useState(false);
     const [showBalanceHistory, setShowBalanceHistory] = useState(false);
-    
-    // Search states for Employee Selection
-    const [searchTerm, setSearchTerm] = useState('');
     const [selectedEmployee, setSelectedEmployee] = useState<string | null>(null);
 
-    // Apply Form State
-    const [applyForm, setApplyForm] = useState({
-        leaveType: 'Vacation Leave',
-        startDate: '',
-        endDate: '',
-        reason: ''
-    });
+    // Review modal state
+    const [showReviewModal, setShowReviewModal] = useState(false);
+    const [reviewRequest, setReviewRequest] = useState<LeaveRequest | null>(null);
 
-    // Edit Request Modal State
-    const [showEditModal, setShowEditModal] = useState(false);
-    const [editRequestForm, setEditRequestForm] = useState<any>(null);
+    // Dynamic stat counts from shared data
+    const pendingCount = leaveRequests.filter(r => r.status === 'Pending').length;
+    const approvedCount = leaveRequests.filter(r => r.status === 'Approved').length;
+    const rejectedCount = leaveRequests.filter(r => r.status === 'Rejected').length;
 
     const tabs = [
         { id: 'request' as Tab, label: 'Leave Requests', icon: Calendar },
@@ -32,9 +35,9 @@ const LeaveManagement = () => {
     ];
 
     const statCards = [
-        { label: 'Pending', value: 8, icon: Clock, gradient: 'linear-gradient(135deg, #d97706, #f59e0b)' },
-        { label: 'Approved', value: 42, icon: CheckCircle, gradient: 'linear-gradient(135deg, #059669, #10b981)' },
-        { label: 'Rejected', value: 5, icon: XCircle, gradient: 'linear-gradient(135deg, #dc2626, #ef4444)' },
+        { label: 'Pending', value: pendingCount, icon: Clock, gradient: 'linear-gradient(135deg, #d97706, #f59e0b)' },
+        { label: 'Approved', value: approvedCount, icon: CheckCircle, gradient: 'linear-gradient(135deg, #059669, #10b981)' },
+        { label: 'Rejected', value: rejectedCount, icon: XCircle, gradient: 'linear-gradient(135deg, #dc2626, #ef4444)' },
         { label: 'On Leave Today', value: 3, icon: AlertTriangle, gradient: 'linear-gradient(135deg, #7c3aed, #8b5cf6)' },
     ];
 
@@ -44,126 +47,36 @@ const LeaveManagement = () => {
         Rejected: 'badge-danger',
     };
 
-    // Employee list derived from data
-    const employeeList = [
-        'Dela Cruz, Juan',
-        'Santos, Maria',
-        'Reyes, Jose',
-        'Garcia, Ana',
-        'Bautista, Pedro',
-        'Fernandez, Rosa'
-    ];
-
-    const filteredEmployees = employeeList.filter(emp => 
-        emp.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-
-    // MOCK DATA: Interactive State
-    const [leaveRequests, setLeaveRequests] = useState([
-        { id: 1, employee: 'Dela Cruz, Juan', department: 'SimpleVia', leaveType: 'Vacation Leave', startDate: '2026-02-26', endDate: '2026-02-28', days: 3, status: 'Pending' as LeaveStatus, reason: 'Family trip to province' },
-        { id: 2, employee: 'Santos, Maria', department: 'SimpleVia', leaveType: 'Sick Leave', startDate: '2026-02-20', endDate: '2026-02-21', days: 2, status: 'Approved' as LeaveStatus, reason: 'Fever and colds' },
-        { id: 3, employee: 'Reyes, Jose', department: 'SimpleVia', leaveType: 'Emergency Leave', startDate: '2026-02-18', endDate: '2026-02-18', days: 1, status: 'Rejected' as LeaveStatus, reason: 'Personal emergency' },
-        { id: 4, employee: 'Garcia, Ana', department: 'SimpleVia', leaveType: 'Vacation Leave', startDate: '2026-03-01', endDate: '2026-03-05', days: 5, status: 'Pending' as LeaveStatus, reason: 'Annual scheduled leave' },
-        { id: 5, employee: 'Fernandez, Rosa', department: 'SimpleVia', leaveType: 'Sick Leave', startDate: '2026-02-24', endDate: '2026-02-25', days: 2, status: 'Approved' as LeaveStatus, reason: 'Dental surgery' },
-    ]);
-
-    const [leaveBalances, setLeaveBalances] = useState([
-        { name: 'Dela Cruz, Juan', id: 'EMP-001', vacation: { total: 15, used: 5 }, sick: { total: 15, used: 3 }, emergency: { total: 5, used: 1 } },
-        { name: 'Santos, Maria', id: 'EMP-002', vacation: { total: 15, used: 8 }, sick: { total: 15, used: 6 }, emergency: { total: 5, used: 0 } },
-        { name: 'Reyes, Jose', id: 'EMP-003', vacation: { total: 15, used: 2 }, sick: { total: 15, used: 1 }, emergency: { total: 5, used: 2 } },
-        { name: 'Garcia, Ana', id: 'EMP-004', vacation: { total: 15, used: 10 }, sick: { total: 15, used: 4 }, emergency: { total: 5, used: 0 } },
-    ]);
-
-    const [balanceHistoryData, setBalanceHistoryData] = useState([
+    const balanceHistoryData = [
         { id: 1, date: '2026-02-20', leaveType: 'Sick Leave', action: 'Used', days: 2 },
         { id: 2, date: '2026-01-15', leaveType: 'Vacation Leave', action: 'Used', days: 3 },
         { id: 3, date: '2026-01-01', leaveType: 'All Types', action: 'Credited', days: 35 },
-    ]);
-
-    const [leaveHistory, setLeaveHistory] = useState([
-        { id: 1, dateApplied: '2026-02-15', employee: 'Dela Cruz, Juan', leaveType: 'Vacation Leave', duration: '3 days', status: 'Approved' as LeaveStatus, approver: 'Admin User' },
-        { id: 2, dateApplied: '2026-02-10', employee: 'Santos, Maria', leaveType: 'Sick Leave', duration: '2 days', status: 'Approved' as LeaveStatus, approver: 'Admin User' },
-        { id: 3, dateApplied: '2026-02-08', employee: 'Reyes, Jose', leaveType: 'Emergency Leave', duration: '1 day', status: 'Rejected' as LeaveStatus, approver: 'Admin User' },
-        { id: 4, dateApplied: '2026-01-28', employee: 'Garcia, Ana', leaveType: 'Vacation Leave', duration: '5 days', status: 'Approved' as LeaveStatus, approver: 'Admin User' },
-    ]);
-
-    // Helpers
-    const calculateDays = (start: string, end: string) => {
-        if (!start || !end) return 0;
-        const s = new Date(start);
-        const e = new Date(end);
-        const diffTime = Math.abs(e.getTime() - s.getTime());
-        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1; 
-        return diffDays > 0 ? diffDays : 0;
-    };
+    ];
 
     // Actions
-    const handleSubmitApplication = () => {
-        if (!selectedEmployee || !applyForm.startDate || !applyForm.endDate) {
-            alert("Please complete the required fields.");
-            return;
-        }
-
-        const newRequest = {
-            id: Date.now(),
-            employee: selectedEmployee,
-            department: 'SimpleVia',
-            leaveType: applyForm.leaveType,
-            startDate: applyForm.startDate,
-            endDate: applyForm.endDate,
-            days: calculateDays(applyForm.startDate, applyForm.endDate),
-            status: 'Pending' as LeaveStatus,
-            reason: applyForm.reason
-        };
-
-        setLeaveRequests([newRequest, ...leaveRequests]);
-        
-        // Add to history too for consistency
-        const newHistoryLog = {
-            id: Date.now() + 1,
-            dateApplied: new Date().toISOString().split('T')[0],
-            employee: newRequest.employee,
-            leaveType: newRequest.leaveType,
-            duration: `${newRequest.days} day(s)`,
-            status: newRequest.status,
-            approver: 'Pending Review'
-        };
-        setLeaveHistory([newHistoryLog, ...leaveHistory]);
-
-        resetSelection();
-    };
-
     const handleDeleteRequest = (id: number) => {
-        if(window.confirm("Are you sure you want to delete this leave request?")) {
-            setLeaveRequests(leaveRequests.filter(r => r.id !== id));
+        if (window.confirm("Are you sure you want to delete this leave request?")) {
+            deleteRequest(id);
         }
     };
 
-    const handleOpenEditModal = (request: any) => {
-        setEditRequestForm({ ...request });
-        setShowEditModal(true);
+    const handleOpenReview = (request: LeaveRequest) => {
+        setReviewRequest(request);
+        setShowReviewModal(true);
     };
 
-    const handleSaveEditRequest = () => {
-        if (!editRequestForm) return;
+    const handleApprove = () => {
+        if (!reviewRequest) return;
+        approveRequest(reviewRequest.id);
+        setShowReviewModal(false);
+        setReviewRequest(null);
+    };
 
-        // Update Request list
-        setLeaveRequests(leaveRequests.map(r => 
-            r.id === editRequestForm.id ? editRequestForm : r
-        ));
-
-        // If status changes to Approved/Rejected, reflect on history
-        if (editRequestForm.status !== 'Pending') {
-            setLeaveHistory(prev => prev.map(h => {
-                if(h.employee === editRequestForm.employee && h.leaveType === editRequestForm.leaveType && h.status === 'Pending') {
-                    return { ...h, status: editRequestForm.status, approver: 'Admin User' };
-                }
-                return h;
-            }));
-        }
-
-        setShowEditModal(false);
-        setEditRequestForm(null);
+    const handleReject = () => {
+        if (!reviewRequest) return;
+        rejectRequest(reviewRequest.id);
+        setShowReviewModal(false);
+        setReviewRequest(null);
     };
 
     const BalanceCard = ({ label, total, used, color }: { label: string; total: number; used: number; color: string }) => {
@@ -192,12 +105,8 @@ const LeaveManagement = () => {
         );
     };
 
-    const resetSelection = () => {
-        setShowApplyModal(false);
-        setSearchTerm('');
-        setSelectedEmployee(null);
-        setApplyForm({ leaveType: 'Vacation Leave', startDate: '', endDate: '', reason: '' });
-    };
+    // Filter history to only show finalized entries
+    const finalizedHistory = leaveHistory.filter(r => r.status === 'Approved' || r.status === 'Rejected');
 
     return (
         <div className="space-y-6">
@@ -205,11 +114,8 @@ const LeaveManagement = () => {
             <div className="flex justify-between items-center animate-fade-in-up">
                 <div className="page-header" style={{ marginBottom: 0 }}>
                     <h1>Leave Management</h1>
-                    <p>Manage leave requests, balances, and history</p>
+                    <p>Review and manage employee leave requests</p>
                 </div>
-                <button onClick={() => setShowApplyModal(true)} className="btn btn-primary">
-                    <Plus className="w-4 h-4" /> Apply for Leave
-                </button>
             </div>
 
             {/* Stat Cards */}
@@ -238,6 +144,11 @@ const LeaveManagement = () => {
                                 className={`pro-tab flex items-center gap-2 ${activeTab === tab.id ? 'active' : ''}`}>
                                 <tab.icon className="w-4 h-4" />
                                 {tab.label}
+                                {tab.id === 'request' && pendingCount > 0 && (
+                                    <span className="ml-1 px-1.5 py-0.5 text-[10px] font-bold bg-amber-100 text-amber-700 rounded-full">
+                                        {pendingCount}
+                                    </span>
+                                )}
                             </button>
                         ))}
                     </div>
@@ -267,9 +178,15 @@ const LeaveManagement = () => {
                                             <td><span className={`badge ${statusBadge[r.status]}`}><span className="badge-dot" />{r.status}</span></td>
                                             <td>
                                                 <div className="flex gap-1">
-                                                    <button onClick={() => handleOpenEditModal(r)} className="btn-ghost btn-icon text-blue-500 hover:bg-blue-50" title="Review Request">
-                                                        <Edit className="w-4 h-4" />
-                                                    </button>
+                                                    {r.status === 'Pending' ? (
+                                                        <button onClick={() => handleOpenReview(r)} className="btn-ghost btn-icon text-blue-500 hover:bg-blue-50" title="Review Request">
+                                                            <Edit className="w-4 h-4" />
+                                                        </button>
+                                                    ) : (
+                                                        <button disabled className="btn-ghost btn-icon text-gray-300 cursor-not-allowed" title="Already reviewed">
+                                                            <Edit className="w-4 h-4" />
+                                                        </button>
+                                                    )}
                                                     <button onClick={() => handleDeleteRequest(r.id)} className="btn-ghost btn-icon text-rose-500 hover:bg-rose-50" title="Delete">
                                                         <Trash2 className="w-4 h-4" />
                                                     </button>
@@ -334,16 +251,22 @@ const LeaveManagement = () => {
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        {leaveHistory.map((r) => (
-                                            <tr key={r.id}>
-                                                <td>{r.dateApplied}</td>
-                                                <td className="!font-medium !text-gray-800">{r.employee}</td>
-                                                <td>{r.leaveType}</td>
-                                                <td>{r.duration}</td>
-                                                <td><span className={`badge ${statusBadge[r.status]}`}><span className="badge-dot" />{r.status}</span></td>
-                                                <td>{r.approver}</td>
+                                        {finalizedHistory.length > 0 ? (
+                                            finalizedHistory.map((r) => (
+                                                <tr key={r.id}>
+                                                    <td>{r.dateApplied}</td>
+                                                    <td className="!font-medium !text-gray-800">{r.employee}</td>
+                                                    <td>{r.leaveType}</td>
+                                                    <td>{r.duration}</td>
+                                                    <td><span className={`badge ${statusBadge[r.status]}`}><span className="badge-dot" />{r.status}</span></td>
+                                                    <td>{r.approver}</td>
+                                                </tr>
+                                            ))
+                                        ) : (
+                                            <tr>
+                                                <td colSpan={6} className="text-center py-6 text-gray-400 italic">No finalized leave records yet. Approve or reject pending requests first.</td>
                                             </tr>
-                                        ))}
+                                        )}
                                     </tbody>
                                 </table>
                             </div>
@@ -352,168 +275,46 @@ const LeaveManagement = () => {
                 </div>
             </div>
 
-            {/* Edit / Review Request Modal */}
-            {showEditModal && editRequestForm && (
+            {/* Review Request Modal */}
+            {showReviewModal && reviewRequest && (
                 <div className="pro-modal-overlay">
                     <div className="pro-modal max-w-md" onClick={e => e.stopPropagation()}>
                         <div className="pro-modal-header border-b border-gray-100 pb-4">
                             <h3>Review Leave Request</h3>
-                            <button onClick={() => setShowEditModal(false)} className="btn-ghost btn-icon"><X className="w-5 h-5 text-gray-400" /></button>
+                            <button onClick={() => setShowReviewModal(false)} className="btn-ghost btn-icon"><X className="w-5 h-5 text-gray-400" /></button>
                         </div>
                         <div className="pro-modal-body space-y-4 pt-4">
-                            
+
                             <div className="bg-gray-50 p-4 rounded-xl border border-gray-100">
-                                <h4 className="text-sm font-bold text-gray-800 mb-1">{editRequestForm.employee}</h4>
-                                <p className="text-xs text-gray-500 mb-4">{editRequestForm.department} Dept.</p>
-                                
+                                <h4 className="text-sm font-bold text-gray-800 mb-1">{reviewRequest.employee}</h4>
+                                <p className="text-xs text-gray-500 mb-4">{reviewRequest.department} Dept.</p>
+
                                 <div className="space-y-2 text-sm">
                                     <div className="flex justify-between">
                                         <span className="text-gray-500 font-medium">Leave Type:</span>
-                                        <span className="font-semibold text-gray-800">{editRequestForm.leaveType}</span>
+                                        <span className="font-semibold text-gray-800">{reviewRequest.leaveType}</span>
                                     </div>
                                     <div className="flex justify-between">
                                         <span className="text-gray-500 font-medium">Duration:</span>
-                                        <span className="font-semibold text-gray-800">{editRequestForm.startDate} to {editRequestForm.endDate} ({editRequestForm.days} days)</span>
+                                        <span className="font-semibold text-gray-800">{reviewRequest.startDate} to {reviewRequest.endDate} ({reviewRequest.days} days)</span>
                                     </div>
                                     <div className="flex justify-between flex-col mt-2 pt-2 border-t border-gray-200">
                                         <span className="text-gray-500 font-medium mb-1">Reason:</span>
-                                        <span className="text-gray-700 italic text-xs bg-white p-2 rounded border border-gray-100">{editRequestForm.reason || 'No reason provided.'}</span>
+                                        <span className="text-gray-700 italic text-xs bg-white p-2 rounded border border-gray-100">{reviewRequest.reason || 'No reason provided.'}</span>
                                     </div>
                                 </div>
                             </div>
 
-                            <div className="space-y-2">
-                                <label className="pro-label text-sm font-bold text-gray-700">Admin Action: Update Status</label>
-                                <select 
-                                    className="pro-select w-full"
-                                    value={editRequestForm.status}
-                                    onChange={(e) => setEditRequestForm({...editRequestForm, status: e.target.value as LeaveStatus})}
-                                >
-                                    <option value="Pending">Pending Evaluation</option>
-                                    <option value="Approved">Approve Leave</option>
-                                    <option value="Rejected">Reject Leave</option>
-                                </select>
-                                <p className="text-xs text-gray-400 mt-1">Select "Approve" or "Reject" to finalize this request.</p>
-                            </div>
+                            <p className="text-xs text-gray-400">Choose an action below to finalize this leave request. The employee will be notified.</p>
 
                         </div>
                         <div className="pro-modal-footer">
-                            <button onClick={() => setShowEditModal(false)} className="btn btn-secondary">Cancel</button>
-                            <button onClick={handleSaveEditRequest} className="btn btn-primary">Save Changes</button>
-                        </div>
-                    </div>
-                </div>
-            )}
-
-            {/* Apply for Leave Modal */}
-            {showApplyModal && (
-                <div className="pro-modal-overlay">
-                    <div className="pro-modal max-w-md" onClick={e => e.stopPropagation()}>
-                        <div className="pro-modal-header">
-                            <h3>Apply for Leave</h3>
-                            <button onClick={resetSelection} className="btn-ghost btn-icon"><X className="w-5 h-5 text-gray-400" /></button>
-                        </div>
-                        <div className="pro-modal-body space-y-4">
-                            <div>
-                                <label className="pro-label">Select Employee</label>
-                                <div className="relative group">
-                                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                        <Search className="h-4 w-4 text-gray-400" />
-                                    </div>
-                                    <input 
-                                        type="text" 
-                                        className="pro-input !pl-10" 
-                                        placeholder="Search employee name..."
-                                        value={searchTerm}
-                                        onChange={(e) => {
-                                            setSearchTerm(e.target.value);
-                                            setSelectedEmployee(null); 
-                                        }}
-                                    />
-                                    {searchTerm && !selectedEmployee && (
-                                        <div className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-xl shadow-xl max-h-48 overflow-y-auto">
-                                            {filteredEmployees.length > 0 ? (
-                                                filteredEmployees.map((emp) => (
-                                                    <div 
-                                                        key={emp} 
-                                                        className="px-4 py-2 hover:bg-emerald-50 cursor-pointer text-sm text-gray-700 flex items-center justify-between"
-                                                        onClick={() => {
-                                                            setSelectedEmployee(emp);
-                                                            setSearchTerm(emp);
-                                                        }}
-                                                    >
-                                                        {emp}
-                                                        <Plus className="w-3 h-3 text-gray-300" />
-                                                    </div>
-                                                ))
-                                            ) : (
-                                                <div className="px-4 py-2 text-sm text-gray-400 italic">No employees found</div>
-                                            )}
-                                        </div>
-                                    )}
-                                    {selectedEmployee && (
-                                        <div className="mt-2 flex items-center gap-2 bg-emerald-50 text-emerald-700 px-3 py-1.5 rounded-lg text-xs font-medium border border-emerald-100 animate-in fade-in slide-in-from-top-1">
-                                            <CheckCircle className="w-3.5 h-3.5" />
-                                            Selected: {selectedEmployee}
-                                            <button onClick={() => { setSelectedEmployee(null); setSearchTerm(''); }} className="ml-auto hover:text-emerald-900">
-                                                <X className="w-3 h-3" />
-                                            </button>
-                                        </div>
-                                    )}
-                                </div>
-                            </div>
-
-                            <div>
-                                <label className="pro-label">Leave Type</label>
-                                <select 
-                                    className="pro-select"
-                                    value={applyForm.leaveType}
-                                    onChange={(e) => setApplyForm({...applyForm, leaveType: e.target.value})}
-                                >
-                                    <option>Vacation Leave</option>
-                                    <option>Sick Leave</option>
-                                    <option>Emergency Leave</option>
-                                </select>
-                            </div>
-                            <div className="grid grid-cols-2 gap-4">
-                                <div>
-                                    <label className="pro-label">Start Date</label>
-                                    <input 
-                                        type="date" 
-                                        className="pro-input" 
-                                        value={applyForm.startDate}
-                                        onChange={(e) => setApplyForm({...applyForm, startDate: e.target.value})}
-                                    />
-                                </div>
-                                <div>
-                                    <label className="pro-label">End Date</label>
-                                    <input 
-                                        type="date" 
-                                        className="pro-input" 
-                                        value={applyForm.endDate}
-                                        onChange={(e) => setApplyForm({...applyForm, endDate: e.target.value})}
-                                    />
-                                </div>
-                            </div>
-                            <div>
-                                <label className="pro-label">Reason</label>
-                                <textarea 
-                                    rows={3} 
-                                    className="pro-input resize-none" 
-                                    placeholder="Reason for leave..." 
-                                    value={applyForm.reason}
-                                    onChange={(e) => setApplyForm({...applyForm, reason: e.target.value})}
-                                />
-                            </div>
-                        </div>
-                        <div className="pro-modal-footer">
-                            <button onClick={resetSelection} className="btn btn-secondary">Cancel</button>
-                            <button 
-                                onClick={handleSubmitApplication} 
-                                className="btn btn-primary" 
-                                disabled={!selectedEmployee}
-                            >
-                                Submit Application
+                            <button onClick={() => setShowReviewModal(false)} className="btn btn-secondary">Cancel</button>
+                            <button onClick={handleReject} className="btn flex items-center gap-1.5 text-white font-semibold px-4 py-2 rounded-xl transition-all" style={{ background: 'linear-gradient(135deg, #dc2626, #ef4444)' }}>
+                                <Ban className="w-4 h-4" /> Deny
+                            </button>
+                            <button onClick={handleApprove} className="btn flex items-center gap-1.5 text-white font-semibold px-4 py-2 rounded-xl transition-all" style={{ background: 'linear-gradient(135deg, #059669, #10b981)' }}>
+                                <CheckSquare className="w-4 h-4" /> Approve
                             </button>
                         </div>
                     </div>
