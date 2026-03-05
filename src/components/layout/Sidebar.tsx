@@ -1,14 +1,19 @@
 import { useState } from 'react';
 import {
-    Home, Users, Clock, FileText, DollarSign, Shield, UserCircle,
+    Home, Users, Clock, FileText, DollarSign, Shield,
     Package, Settings, ChevronLeft, ChevronRight, LogOut,
-    Newspaper, BarChart3, Building2, HelpCircle, ArrowLeft
+    Newspaper, BarChart3, Building2, HelpCircle, ArrowLeft, X
 } from 'lucide-react';
 import { NavLink } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import logo from '../../assets/logo.svg';
 
-const Sidebar = () => {
+interface SidebarProps {
+    isMobileOpen?: boolean;
+    onClose?: () => void;
+}
+
+const Sidebar = ({ isMobileOpen, onClose }: SidebarProps) => {
     const [collapsed, setCollapsed] = useState(false);
     const { role, logout } = useAuth();
 
@@ -17,11 +22,8 @@ const Sidebar = () => {
         window.location.href = '/login';
     };
 
-    const mainNav = [
-        { icon: Home, label: 'Dashboard', path: '/dashboard' },
-    ];
+    const mainNav = [{ icon: Home, label: 'Dashboard', path: '/dashboard' }];
 
-    // Admin sees all HR management pages
     const hrNav = [
         { icon: Users, label: 'Employee Management', path: '/dashboard/personal-records' },
         { icon: Clock, label: 'Time & Attendance', path: '/dashboard/attendance' },
@@ -30,7 +32,6 @@ const Sidebar = () => {
         { icon: Shield, label: 'Government Compliance', path: '/dashboard/compliance' },
     ];
 
-    // User navigation matching sample images
     const userNav = [
         { icon: Newspaper, label: 'Company News', path: '/dashboard/company-news' },
         { icon: Clock, label: 'My Attendance', path: '/dashboard/my-attendance' },
@@ -41,15 +42,10 @@ const Sidebar = () => {
         { icon: HelpCircle, label: 'Help & Support', path: '/dashboard/help-support' },
     ];
 
-    const moduleNav = [
-        { icon: Package, label: 'Asset Management', path: '/dashboard/assets' },
-    ];
+    const moduleNav = [{ icon: Package, label: 'Asset Management', path: '/dashboard/assets' }];
+    const systemNav = [{ icon: Settings, label: 'Admin Settings', path: '/dashboard/settings' }];
 
-    const systemNav = [
-        { icon: Settings, label: 'Admin Settings', path: '/dashboard/settings' },
-    ];
-
-    const NavSection = ({ title, items }: { title: string; items: typeof mainNav }) => (
+    const NavSection = ({ title, items }: { title: string; items: any[] }) => (
         <div className="mb-2">
             {!collapsed && (
                 <p className="px-4 mb-2 text-[10px] font-semibold uppercase tracking-[0.15em] text-emerald-300/50">
@@ -60,7 +56,7 @@ const Sidebar = () => {
                 <NavLink
                     key={item.path}
                     to={item.path}
-                    end={item.path === '/dashboard'}
+                    onClick={() => window.innerWidth < 1024 && onClose?.()}
                     className={({ isActive }) =>
                         `group flex items-center gap-3 mx-2 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 relative ${isActive
                             ? 'bg-white/15 text-white shadow-lg shadow-black/10'
@@ -73,8 +69,7 @@ const Sidebar = () => {
                             {isActive && (
                                 <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 bg-emerald-400 rounded-r-full" />
                             )}
-                            <item.icon className={`w-[18px] h-[18px] flex-shrink-0 transition-colors ${isActive ? 'text-emerald-400' : 'text-emerald-200/60 group-hover:text-emerald-300'
-                                }`} />
+                            <item.icon className={`w-[18px] h-[18px] flex-shrink-0 transition-colors ${isActive ? 'text-emerald-400' : 'text-emerald-200/60 group-hover:text-emerald-300'}`} />
                             {!collapsed && <span className="truncate">{item.label}</span>}
                         </>
                     )}
@@ -84,94 +79,70 @@ const Sidebar = () => {
     );
 
     return (
-        <div
-            className={`h-screen flex flex-col fixed left-0 top-0 z-30 transition-all duration-300 ${collapsed ? 'w-[72px]' : 'w-[260px]'
-                }`}
-            style={{ background: 'linear-gradient(180deg, #064e3b 0%, #065f46 40%, #047857 100%)' }}
-        >
-            {/* Logo Section */}
-            <div className={`px-4 pt-5 pb-4 border-b border-white/10 ${collapsed ? 'px-3' : ''}`}>
-                <div className={`flex items-center ${collapsed ? 'justify-center' : 'gap-3'}`}>
-                    <div className="w-10 h-10 rounded-xl bg-white/10 p-1.5 flex-shrink-0">
-                        <img src={logo} alt="SimpleVia Logo" className="w-full h-full" />
-                    </div>
-                    {!collapsed && (
-                        <div className="animate-fade-in">
-                            <p className="text-white text-sm font-bold leading-tight tracking-wide">SimpleVia</p>
-                            <p className="text-emerald-300/60 text-[10px] leading-tight">HRIS Platform</p>
+        <>
+            {/* Mobile Overlay */}
+            {isMobileOpen && (
+                <div 
+                    className="fixed inset-0 bg-black/50 z-40 lg:hidden backdrop-blur-sm"
+                    onClick={onClose}
+                />
+            )}
+
+            <div
+                className={`h-screen flex flex-col fixed left-0 top-0 z-50 transition-all duration-300 
+                ${isMobileOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'} 
+                ${collapsed ? 'w-[72px]' : 'w-[260px]'}`}
+                style={{ background: 'linear-gradient(180deg, #064e3b 0%, #065f46 40%, #047857 100%)' }}
+            >
+                <div className={`px-4 pt-5 pb-4 border-b border-white/10 flex items-center justify-between ${collapsed ? 'px-3' : ''}`}>
+                    <div className={`flex items-center ${collapsed ? 'justify-center' : 'gap-3'}`}>
+                        <div className="w-10 h-10 rounded-xl bg-white/10 p-1.5 flex-shrink-0">
+                            <img src={logo} alt="Logo" className="w-full h-full" />
                         </div>
-                    )}
-                </div>
-            </div>
-
-            {/* Navigation - Role-based */}
-            <nav className="flex-1 py-4 overflow-y-auto space-y-1">
-                <NavSection title="Main" items={mainNav} />
-                {role === 'admin' ? (
-                    <>
-                        <NavSection title="Human Resources" items={hrNav} />
-                        <NavSection title="Modules" items={moduleNav} />
-                        <NavSection title="System" items={systemNav} />
-                    </>
-                ) : (
-                    <NavSection title="My Pages" items={userNav} />
-                )}
-            </nav>
-
-            {/* User Section & Collapse */}
-            {role === 'admin' ? (
-                <>
-                    <button
-                        onClick={() => setCollapsed(!collapsed)}
-                        className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-xl text-emerald-200/60 hover:bg-white/8 hover:text-white transition-all text-xs font-medium"
-                    >
-                        {collapsed ? <ChevronRight className="w-4 h-4" /> : (
-                            <>
-                                <ChevronLeft className="w-4 h-4" />
-                                <span>Collapse</span>
-                            </>
-                        )}
-                    </button>
-                    <div className="border-t border-white/10 p-3 space-y-2">
                         {!collapsed && (
-                            <div className="flex items-center gap-3 px-2 py-2 rounded-xl bg-white/5">
-                                <div className="w-8 h-8 rounded-full bg-emerald-500 flex items-center justify-center text-white text-xs font-bold flex-shrink-0 ring-2 ring-emerald-400/30">
-                                    A
-                                </div>
-                                <div className="flex-1 min-w-0">
-                                    <p className="text-white text-xs font-semibold truncate">Admin User</p>
-                                    <p className="text-emerald-300/50 text-[10px] truncate">HR Administrator</p>
-                                </div>
+                            <div className="animate-fade-in">
+                                <p className="text-white text-sm font-bold leading-tight tracking-wide">SimpleVia</p>
+                                <p className="text-emerald-300/60 text-[10px] leading-tight">HRIS Platform</p>
                             </div>
                         )}
-                        <button
-                            onClick={handleLogout}
-                            className={`w-full flex items-center gap-2 px-3 py-2.5 rounded-xl border border-rose-500/30 text-white hover:bg-rose-500/20 hover:border-rose-500/50 transition-all text-sm font-semibold shadow-lg shadow-rose-950/20 ${collapsed ? 'justify-center px-0' : 'px-4'}`}
-                        >
-                            <LogOut className="w-[18px] h-[18px] text-rose-400 group-hover:text-rose-300" />
-                            {!collapsed && <span>Log Out</span>}
-                        </button>
                     </div>
-                </>
-            ) : (
-                <div className="border-t border-white/10 p-3 space-y-2">
-                    <NavLink
-                        to="/dashboard"
-                        className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-emerald-100/70 hover:bg-white/8 hover:text-white transition-all text-sm font-medium"
-                    >
-                        <ArrowLeft className="w-[18px] h-[18px] text-emerald-200/60" />
-                        <span>Back to home</span>
-                    </NavLink>
-                    <button
-                        onClick={handleLogout}
-                        className="w-full flex items-center gap-2 px-4 py-2.5 rounded-xl border border-rose-500/30 text-white hover:bg-rose-500/20 hover:border-rose-500/50 transition-all text-sm font-semibold shadow-lg shadow-rose-950/20"
-                    >
-                        <LogOut className="w-[18px] h-[18px] text-rose-400" />
-                        <span>Log Out</span>
+                    {/* Mobile Close Button */}
+                    <button onClick={onClose} className="lg:hidden text-white/70 hover:text-white">
+                        <X className="w-5 h-5" />
                     </button>
                 </div>
-            )}
-        </div>
+
+                <nav className="flex-1 py-4 overflow-y-auto space-y-1 no-scrollbar">
+                    <NavSection title="Main" items={mainNav} />
+                    {role === 'admin' ? (
+                        <>
+                            <NavSection title="Human Resources" items={hrNav} />
+                            <NavSection title="Modules" items={moduleNav} />
+                            <NavSection title="System" items={systemNav} />
+                        </>
+                    ) : (
+                        <NavSection title="My Pages" items={userNav} />
+                    )}
+                </nav>
+
+                <div className="border-t border-white/10 p-3 space-y-2">
+                    <button
+                        onClick={() => setCollapsed(!collapsed)}
+                        className="hidden lg:flex w-full items-center justify-center gap-2 px-3 py-2 rounded-xl text-emerald-200/60 hover:bg-white/8 hover:text-white transition-all text-xs font-medium"
+                    >
+                        {collapsed ? <ChevronRight className="w-4 h-4" /> : <><ChevronLeft className="w-4 h-4" /><span>Collapse</span></>}
+                    </button>
+                    
+                    <button
+                        onClick={handleLogout}
+                        className={`w-full flex items-center gap-2 px-3 py-2.5 rounded-xl border border-rose-500/30 text-white hover:bg-rose-500/20 transition-all text-sm font-semibold ${collapsed ? 'justify-center px-0' : 'px-4'}`}
+                    >
+                        <LogOut className="w-[18px] h-[18px] text-rose-400" />
+                        {!collapsed && <span>Log Out</span>}
+                    </button>
+                </div>
+            </div>
+        </>
     );
 };
 

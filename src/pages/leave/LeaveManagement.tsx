@@ -161,7 +161,7 @@ const LeaveManagement = () => {
                             <table className="pro-table">
                                 <thead>
                                     <tr>
-                                        {['Employee', 'Department', 'Leave Type', 'Start Date', 'End Date', 'Days', 'Status', 'Actions'].map(h => (
+                                        {['Employee', 'Leave Type', 'Start Date', 'End Date', 'Days', 'Status', 'Actions'].map(h => (
                                             <th key={h}>{h}</th>
                                         ))}
                                     </tr>
@@ -170,7 +170,7 @@ const LeaveManagement = () => {
                                     {leaveRequests.map((r) => (
                                         <tr key={r.id}>
                                             <td className="!font-medium !text-gray-800">{r.employee}</td>
-                                            <td>{r.department}</td>
+                                            {/* Department data cell removed here */}
                                             <td>{r.leaveType}</td>
                                             <td>{r.startDate}</td>
                                             <td>{r.endDate}</td>
@@ -196,7 +196,7 @@ const LeaveManagement = () => {
                                     ))}
                                     {leaveRequests.length === 0 && (
                                         <tr>
-                                            <td colSpan={8} className="text-center py-6 text-gray-500 italic">No leave requests found.</td>
+                                            <td colSpan={7} className="text-center py-6 text-gray-500 italic">No leave requests found.</td>
                                         </tr>
                                     )}
                                 </tbody>
@@ -287,7 +287,7 @@ const LeaveManagement = () => {
 
                             <div className="bg-gray-50 p-4 rounded-xl border border-gray-100">
                                 <h4 className="text-sm font-bold text-gray-800 mb-1">{reviewRequest.employee}</h4>
-                                <p className="text-xs text-gray-500 mb-4">{reviewRequest.department} Dept.</p>
+                                {/* Department info removed from modal */}
 
                                 <div className="space-y-2 text-sm">
                                     <div className="flex justify-between">

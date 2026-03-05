@@ -47,14 +47,45 @@ const AttendanceTable = () => {
         emp.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
+    // TIME CONVERSION HELPERS
+    const convertTo24Hour = (timeStr: string) => {
+        if (!timeStr) return '';
+        if (!timeStr.includes('M')) return timeStr; // Return as is if already 24h format
+        const [time, modifier] = timeStr.split(' ');
+        let [hours, minutes] = time.split(':');
+        if (hours === '12') hours = '00';
+        if (modifier === 'PM') hours = (parseInt(hours, 10) + 12).toString();
+        return `${hours.padStart(2, '0')}:${minutes}`;
+    };
+
+    const convertTo12Hour = (timeStr: string) => {
+        if (!timeStr) return '';
+        if (timeStr.includes('M')) return timeStr; // Return as is if already 12h format
+        let [hours, minutes] = timeStr.split(':');
+        let h = parseInt(hours, 10);
+        const ampm = h >= 12 ? 'PM' : 'AM';
+        h = h % 12 || 12;
+        return `${h.toString().padStart(2, '0')}:${minutes} ${ampm}`;
+    };
+
     const handleEditRecordClick = (record: any) => {
-        setEditRecordForm({ ...record });
+        // Prepare data with 24-hour time so <input type="time"> can read it
+        setEditRecordForm({ 
+            ...record,
+            timeIn: convertTo24Hour(record.timeIn),
+            timeOut: convertTo24Hour(record.timeOut)
+        });
         setShowEditRecordModal(true);
     };
 
-
     const handleSaveRecordEdit = () => {
-        setDtrRecords((prev: any[]) => prev.map(r => r.id === editRecordForm.id ? editRecordForm : r));
+        // Format back to 12-hour format before saving so table looks correct
+        const formattedRecord = {
+            ...editRecordForm,
+            timeIn: convertTo12Hour(editRecordForm.timeIn),
+            timeOut: convertTo12Hour(editRecordForm.timeOut)
+        };
+        setDtrRecords((prev: any[]) => prev.map(r => r.id === editRecordForm.id ? formattedRecord : r));
         setShowEditRecordModal(false);
     };
 
@@ -150,8 +181,8 @@ const AttendanceTable = () => {
         setEditingShift(shift);
         setShiftForm({
             name: shift.name,
-            timeIn: shift.timeIn,
-            timeOut: shift.timeOut,
+            timeIn: convertTo24Hour(shift.timeIn),
+            timeOut: convertTo24Hour(shift.timeOut),
             grace: String(shift.grace).replace(' min', ''),
             status: shift.status
         });
@@ -166,8 +197,8 @@ const AttendanceTable = () => {
         const newShift = {
             id: Date.now(),
             name: shiftForm.name,
-            timeIn: shiftForm.timeIn,
-            timeOut: shiftForm.timeOut,
+            timeIn: convertTo12Hour(shiftForm.timeIn),
+            timeOut: convertTo12Hour(shiftForm.timeOut),
             grace: shiftForm.grace + ' min',
             employees: 0,
             status: shiftForm.status
@@ -183,8 +214,8 @@ const AttendanceTable = () => {
         setShifts(shifts.map(s => s.id === editingShift.id ? {
             ...s,
             name: shiftForm.name,
-            timeIn: shiftForm.timeIn,
-            timeOut: shiftForm.timeOut,
+            timeIn: convertTo12Hour(shiftForm.timeIn),
+            timeOut: convertTo12Hour(shiftForm.timeOut),
             grace: shiftForm.grace + ' min',
             status: shiftForm.status
         } : s));
@@ -430,27 +461,26 @@ const AttendanceTable = () => {
                         <div className="pro-modal-body space-y-4">
                             <div>
                                 <label className="pro-label">Employee</label>
-                                <input type="text" value={editRecordForm.name} disabled className="pro-input bg-gray-50 text-gray-500 cursor-not-allowed" />
+                                {/* FIX: use editRecordForm.employee instead of editRecordForm.name */}
+                                <input type="text" value={editRecordForm.employee || ''} disabled className="pro-input bg-gray-50 text-gray-500 cursor-not-allowed" />
                             </div>
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
                                     <label className="pro-label">Time In</label>
                                     <input
-                                        type="text"
+                                        type="time"
                                         value={editRecordForm.timeIn}
                                         onChange={e => setEditRecordForm({ ...editRecordForm, timeIn: e.target.value })}
                                         className="pro-input"
-                                        placeholder="e.g. 08:00 AM"
                                     />
                                 </div>
                                 <div>
                                     <label className="pro-label">Time Out</label>
                                     <input
-                                        type="text"
+                                        type="time"
                                         value={editRecordForm.timeOut}
                                         onChange={e => setEditRecordForm({ ...editRecordForm, timeOut: e.target.value })}
                                         className="pro-input"
-                                        placeholder="e.g. 05:00 PM"
                                     />
                                 </div>
                             </div>
