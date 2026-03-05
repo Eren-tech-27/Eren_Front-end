@@ -59,6 +59,15 @@ const AdminOnly = ({ children }: { children: React.ReactNode }) => {
   return <>{children}</>;
 };
 
+// ADDED: Global Route Guard to prevent layout flickering on logout
+const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
+  const { isLoggedIn } = useAuth();
+  if (!isLoggedIn) {
+    return <Navigate to="/login" replace />;
+  }
+  return <>{children}</>;
+};
+
 function AppRoutes() {
   return (
     <Routes>
@@ -67,7 +76,8 @@ function AppRoutes() {
       <Route path="/forgot-password" element={<ForgotPassword />} />
 
       {/* Protected Routes */}
-      <Route path="/dashboard" element={<Layout />}>
+      {/* ADDED: Wrapped the Layout route in ProtectedRoute */}
+      <Route path="/dashboard" element={<ProtectedRoute><Layout /></ProtectedRoute>}>
         <Route index element={<Dashboard />} />
 
         {/* Admin-only pages */}
