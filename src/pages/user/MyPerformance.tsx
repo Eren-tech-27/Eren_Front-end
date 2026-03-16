@@ -20,7 +20,7 @@ const MyPerformance = () => {
     const achievements = [
         { icon: '🏆', title: 'Employee of the Month', sub: 'Awarded November 2025', color: '#f59e0b' },
         { icon: '☁️', title: 'AWS Cloud Architect', sub: 'Certification Completed, Jan 2026', color: '#2563eb' },
-        { icon: '🤝', title: 'Team Player Award', sub: 'Voted by peers, H1 Q3 2025', color: '#8b5cf6' },
+        { icon: '🤝', title: 'Team Player Award', sub: 'Voted by peers, H1 Q3 2025', color: '#dc2626' },
     ];
 
     const taskData = {

@@ -19,10 +19,10 @@ const HRISSystem: FC = () => {
         { icon: Users, label: 'Employee Management', path: '/dashboard/personal-records', gradient: 'linear-gradient(135deg, #2563eb, #3b82f6)' },
         { icon: Clock, label: 'Time & Attendance', path: '/dashboard/attendance', gradient: 'linear-gradient(135deg, #d97706, #f59e0b)' },
         { icon: FileText, label: 'Leave Management', path: '/dashboard/leave', gradient: 'linear-gradient(135deg, #059669, #34d399)' },
-        { icon: DollarSign, label: 'Payroll', path: '/dashboard/payroll', gradient: 'linear-gradient(135deg, #7c3aed, #a78bfa)' },
+        { icon: DollarSign, label: 'Payroll', path: '/dashboard/payroll', gradient: 'linear-gradient(135deg, #dc2626, #ef4444)' },
         { icon: Shield, label: 'Government Compliance', path: '/dashboard/compliance', gradient: 'linear-gradient(135deg, #dc2626, #ef4444)' },
-        { icon: Package, label: 'Asset Management', path: '/dashboard/assets', gradient: 'linear-gradient(135deg, #78350f, #a16207)' },
-        { icon: Settings, label: 'Administration Setting', path: '/dashboard/settings', gradient: 'linear-gradient(135deg, #475569, #64748b)' },
+        { icon: Package, label: 'Asset Management', path: '/dashboard/assets', gradient: 'linear-gradient(135deg, #d97706, #f59e0b)' },
+        { icon: Settings, label: 'Administration Setting', path: '/dashboard/settings', gradient: 'linear-gradient(135deg, #2563eb, #3b82f6)' },
     ];
 
     return (

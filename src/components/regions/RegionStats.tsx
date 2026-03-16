@@ -1,4 +1,3 @@
-
 import { Users, UserX, Building } from 'lucide-react';
 
 interface RegionStatsProps {
@@ -80,9 +79,9 @@ const RegionStats = ({ regionId }: RegionStatsProps) => {
                 <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex items-center justify-between">
                     <div>
                         <p className="text-gray-500 text-sm font-medium">Satellite Offices</p>
-                        <p className="text-3xl font-bold text-purple-500 mt-1">{stats.offices}</p>
+                        <p className="text-3xl font-bold text-red-500 mt-1">{stats.offices}</p>
                     </div>
-                    <div className="p-3 bg-purple-50 text-purple-500 rounded-full">
+                    <div className="p-3 bg-red-50 text-red-500 rounded-full">
                         <Building size={24} />
                     </div>
                 </div>

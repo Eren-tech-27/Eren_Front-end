@@ -16,13 +16,13 @@ const UserDashboard = () => {
         { label: 'Leaves Available', value: '12.5 Days', sub: '8 Vacation, 4.5 Sick', icon: Calendar, gradient: 'linear-gradient(135deg, #059669 0%, #10b981 100%)' },
         { label: 'Current Shift', value: '09:00 AM - 06:00 PM', sub: 'Regular Schedule', icon: Clock, gradient: 'linear-gradient(135deg, #2563eb 0%, #3b82f6 100%)' },
         { label: 'Next Payday', value: 'Feb 15, 2026', sub: '5 days remaining', icon: DollarSign, gradient: 'linear-gradient(135deg, #d97706 0%, #f59e0b 100%)' },
-        { label: 'Performance Rating', value: '4.6 / 5.0', sub: 'Top 10% in Department', icon: Star, gradient: 'linear-gradient(135deg, #7c3aed 0%, #a78bfa 100%)' },
+        { label: 'Performance Rating', value: '4.6 / 5.0', sub: 'Top 10% in Department', icon: Star, gradient: 'linear-gradient(135deg, #dc2626 0%, #ef4444 100%)' },
     ];
 
     const quickActions = [
         { label: 'Time In/Out', icon: Clock, path: '/dashboard/my-attendance', color: '#059669' },
         { label: 'File a Leave', icon: FileText, path: '/dashboard/my-leave', color: '#2563eb' },
-        { label: 'View Payslip', icon: DollarSign, path: '/dashboard/my-payslips', color: '#7c3aed' },
+        { label: 'View Payslip', icon: DollarSign, path: '/dashboard/my-payslips', color: '#d97706' },
     ];
 
     const announcements = [
@@ -40,7 +40,7 @@ const UserDashboard = () => {
     const perks = [
         { icon: '🏥', title: 'Premium Health HMO', desc: 'Access Your Healthcard Details And Dependents Coverage Limits.', color: '#059669' },
         { icon: '🌐', title: 'WFH Connectivity Allowance', desc: 'Learn How To Claim Your Monthly ₱50 Internet Subsidy.', color: '#2563eb' },
-        { icon: '📚', title: 'Learning & Development', desc: 'Up To ₱500/Year For Courses And Certifications To Advance Your Career.', color: '#7c3aed' },
+        { icon: '📚', title: 'Learning & Development', desc: 'Up To ₱500/Year For Courses And Certifications To Advance Your Career.', color: '#dc2626' },
     ];
 
     const greeting = () => {
@@ -219,14 +219,14 @@ const AdminDashboard = () => {
         { icon: Clock, text: 'Attendance report generated for January', time: '4 hours ago', color: '#3b82f6' },
         { icon: FileText, text: 'Leave request approved for Juan Dela Cruz', time: '5 hours ago', color: '#f59e0b' },
         { icon: TrendingUp, text: 'Payroll processing completed for January', time: '1 day ago', color: '#059669' },
-        { icon: Users, text: '3 employees completed probationary period', time: '2 days ago', color: '#8b5cf6' },
+        { icon: Users, text: '3 employees completed probationary period', time: '2 days ago', color: '#3b82f6' },
     ];
 
     const financialBreakdown = [
         { label: 'Basic Salary', amount: '₱6,200,000', percent: 73, color: '#059669' },
         { label: 'Overtime Pay', amount: '₱850,000', percent: 10, color: '#3b82f6' },
-        { label: 'Allowances', amount: '₱650,000', percent: 8, color: '#8b5cf6' },
-        { label: 'Benefits', amount: '₱500,000', percent: 6, color: '#14b8a6' },
+        { label: 'Allowances', amount: '₱650,000', percent: 8, color: '#f59e0b' },
+        { label: 'Benefits', amount: '₱500,000', percent: 6, color: '#2563eb' },
         { label: 'Deductions', amount: '-₱1,700,000', percent: 20, color: '#ef4444' },
     ];
 
