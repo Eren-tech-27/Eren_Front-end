@@ -35,7 +35,7 @@ const AttendanceTable = () => {
         { label: 'Present', value: 220, icon: CheckCircle, gradient: 'linear-gradient(135deg, #059669, #10b981)' },
         { label: 'Late', value: 12, icon: AlertTriangle, gradient: 'linear-gradient(135deg, #d97706, #f59e0b)' },
         { label: 'Absent', value: 8, icon: XCircle, gradient: 'linear-gradient(135deg, #dc2626, #ef4444)' },
-        { label: 'Total Hours', value: '1,760', icon: Clock, gradient: 'linear-gradient(135deg, #6366f1, #818cf8)' },
+        { label: 'Total Hours', value: '1,760', icon: Clock, gradient: 'linear-gradient(135deg, #2563eb, #3b82f6)' }, // Changed to standard blue
     ];
 
     // 1. DTR Records: from shared AttendanceContext (persisted in localStorage)
