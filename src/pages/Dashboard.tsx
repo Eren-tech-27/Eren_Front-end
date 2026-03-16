@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Users, UserCheck, UserX, UserPlus, TrendingUp, Clock, FileText, DollarSign, ArrowUpRight, CalendarDays, Star, Briefcase, CheckCircle2, Calendar, Megaphone, Gift, BookOpen } from 'lucide-react';
+import { Users, UserCheck, UserX, UserPlus, TrendingUp, Clock, FileText, PhilippinePeso, ArrowUpRight, CalendarDays, Star, Briefcase, CheckCircle2, Calendar, Megaphone, Gift, BookOpen } from 'lucide-react';
 import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, ArcElement, Tooltip, Legend } from 'chart.js';
 import { Bar, Doughnut } from 'react-chartjs-2';
 import { useAuth } from '../context/AuthContext';
@@ -15,14 +15,14 @@ const UserDashboard = () => {
     const statCards = [
         { label: 'Leaves Available', value: '12.5 Days', sub: '8 Vacation, 4.5 Sick', icon: Calendar, gradient: 'linear-gradient(135deg, #059669 0%, #10b981 100%)' },
         { label: 'Current Shift', value: '09:00 AM - 06:00 PM', sub: 'Regular Schedule', icon: Clock, gradient: 'linear-gradient(135deg, #2563eb 0%, #3b82f6 100%)' },
-        { label: 'Next Payday', value: 'Feb 15, 2026', sub: '5 days remaining', icon: DollarSign, gradient: 'linear-gradient(135deg, #d97706 0%, #f59e0b 100%)' },
+        { label: 'Next Payday', value: 'Feb 15, 2026', sub: '5 days remaining', icon: PhilippinePeso, gradient: 'linear-gradient(135deg, #d97706 0%, #f59e0b 100%)' },
         { label: 'Performance Rating', value: '4.6 / 5.0', sub: 'Top 10% in Department', icon: Star, gradient: 'linear-gradient(135deg, #dc2626 0%, #ef4444 100%)' },
     ];
 
     const quickActions = [
         { label: 'Time In/Out', icon: Clock, path: '/dashboard/my-attendance', color: '#059669' },
         { label: 'File a Leave', icon: FileText, path: '/dashboard/my-leave', color: '#2563eb' },
-        { label: 'View Payslip', icon: DollarSign, path: '/dashboard/my-payslips', color: '#d97706' },
+        { label: 'View Payslip', icon: PhilippinePeso, path: '/dashboard/my-payslips', color: '#d97706' },
     ];
 
     const announcements = [
@@ -331,7 +331,7 @@ const AdminDashboard = () => {
                     </div>
                     <div className="mb-5 p-4 bg-gradient-to-r from-emerald-50 to-teal-50 rounded-xl border border-emerald-100">
                         <div className="flex items-center gap-2 mb-1">
-                            <DollarSign className="w-4 h-4 text-emerald-600" />
+                            <PhilippinePeso className="w-4 h-4 text-emerald-600" />
                             <span className="text-xs text-gray-500 font-medium">Total Payroll</span>
                         </div>
                         <p className="text-2xl font-bold text-gray-900">₱8,500,000</p>

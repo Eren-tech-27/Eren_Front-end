@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { DollarSign, TrendingDown, Percent, FileText, X, Download, Eye, Printer } from 'lucide-react';
+import { PhilippinePeso, TrendingDown, Percent, FileText, X, Download, Eye, Printer } from 'lucide-react';
 
 type Tab = 'records' | 'deductions' | '13th' | 'payslip';
 
@@ -17,15 +17,15 @@ const Payroll = () => {
     const tabs = [
         { id: 'records' as Tab, label: 'Payroll Records', icon: FileText },
         { id: 'deductions' as Tab, label: 'Deductions', icon: TrendingDown },
-        { id: '13th' as Tab, label: '13th Month Pay', icon: DollarSign },
+        { id: '13th' as Tab, label: '13th Month Pay', icon: PhilippinePeso },
         { id: 'payslip' as Tab, label: 'Payslip', icon: Printer },
     ];
 
     const statCards = [
-        { label: 'Total Payroll', value: '₱8,400,000', icon: DollarSign, gradient: 'linear-gradient(135deg, #059669, #10b981)' },
+        { label: 'Total Payroll', value: '₱8,400,000', icon: PhilippinePeso, gradient: 'linear-gradient(135deg, #059669, #10b981)' },
         { label: 'Total Deductions', value: '₱1,700,000', icon: TrendingDown, gradient: 'linear-gradient(135deg, #dc2626, #ef4444)' },
         { label: 'Avg Tax Rate', value: '8.5%', icon: Percent, gradient: 'linear-gradient(135deg, #d97706, #f59e0b)' },
-        { label: 'Net Payroll', value: '₱6,700,000', icon: DollarSign, gradient: 'linear-gradient(135deg, #2563eb, #3b82f6)' },
+        { label: 'Net Payroll', value: '₱6,700,000', icon: PhilippinePeso, gradient: 'linear-gradient(135deg, #2563eb, #3b82f6)' },
     ];
 
     const payrollRecords = [
@@ -148,7 +148,7 @@ const Payroll = () => {
                                 {govDeductions.map(d => (
                                     <div key={d.name} className="pro-card !shadow-none border border-gray-100 p-5 flex items-center gap-4 hover:shadow-md transition-shadow">
                                         <div className="w-12 h-12 rounded-xl flex items-center justify-center shadow-sm" style={{ background: d.color + '15' }}>
-                                            <DollarSign className="w-5 h-5" style={{ color: d.color }} />
+                                            <PhilippinePeso className="w-5 h-5" style={{ color: d.color }} />
                                         </div>
                                         <div>
                                             <p className="text-sm font-bold text-gray-900">{d.name}</p>

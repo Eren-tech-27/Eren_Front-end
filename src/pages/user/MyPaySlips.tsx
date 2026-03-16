@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { DollarSign, Download, Eye, X, ChevronLeft, ChevronRight } from 'lucide-react';
+import { PhilippinePeso, Download, Eye, X, ChevronLeft, ChevronRight } from 'lucide-react';
 
 interface PayslipDetail {
     period: string;
@@ -71,10 +71,10 @@ const MyPaySlips = () => {
     const perPage = 10;
 
     const ytdCards = [
-        { label: 'YTD GROSS EARNINGS', value: '₱56,000.00', icon: DollarSign, color: '#059669', bg: '#ecfdf5' },
-        { label: 'YTD NET PAY', value: '₱56,000.00', icon: DollarSign, color: '#2563eb', bg: '#eff6ff' },
-        { label: 'YTD DEDUCTIONS', value: '₱56,000.00', icon: DollarSign, color: '#dc2626', bg: '#fef2f2' },
-        { label: 'NEXT PAY', value: '₱56,000.00', icon: DollarSign, color: '#7c3aed', bg: '#f5f3ff' },
+        { label: 'YTD GROSS EARNINGS', value: '₱56,000.00', icon: PhilippinePeso, color: '#059669', bg: '#ecfdf5' },
+        { label: 'YTD NET PAY', value: '₱56,000.00', icon: PhilippinePeso, color: '#2563eb', bg: '#eff6ff' },
+        { label: 'YTD DEDUCTIONS', value: '₱56,000.00', icon: PhilippinePeso, color: '#dc2626', bg: '#fef2f2' },
+        { label: 'NEXT PAY', value: '₱56,000.00', icon: PhilippinePeso, color: '#7c3aed', bg: '#f5f3ff' },
     ];
 
     const totalPages = Math.ceil(payslipData.length / perPage);
