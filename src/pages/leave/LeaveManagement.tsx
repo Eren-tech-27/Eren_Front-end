@@ -38,7 +38,7 @@ const LeaveManagement = () => {
         { label: 'Pending', value: pendingCount, icon: Clock, gradient: 'linear-gradient(135deg, #d97706, #f59e0b)' },
         { label: 'Approved', value: approvedCount, icon: CheckCircle, gradient: 'linear-gradient(135deg, #059669, #10b981)' },
         { label: 'Rejected', value: rejectedCount, icon: XCircle, gradient: 'linear-gradient(135deg, #dc2626, #ef4444)' },
-        { label: 'On Leave Today', value: 3, icon: AlertTriangle, gradient: 'linear-gradient(135deg, #2563eb, #3b82f6)' },
+        { label: 'On Leave Today', value: 3, icon: AlertTriangle, gradient: 'linear-gradient(135deg, #0ea5e9, #38bdf8)' }, // Changed to clear sky blue
     ];
 
     const statusBadge: Record<string, string> = {

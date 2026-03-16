@@ -100,7 +100,7 @@ const MyAttendance = () => {
                             <div className="flex items-center gap-4">
                                 <div className="text-right">
                                     <p className="text-[10px] font-bold text-emerald-500 uppercase tracking-widest">Current Time</p>
-                                    <p className="text-2xl font-black text-emerald-600 font-mono tracking-tighter">
+                                    <p className="text-2xl font-black text-emerald-600 font-mono tracking-tighter whitespace-nowrap">
                                         {currentTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
                                     </p>
                                 </div>
@@ -131,13 +131,13 @@ const MyAttendance = () => {
                         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                             <div className="flex flex-col p-4 bg-gray-50 border border-gray-100 rounded-2xl transition-all">
                                 <label className="text-[10px] font-bold text-emerald-600 mb-1 uppercase tracking-wider">Time In</label>
-                                <span className={`text-xl font-black ${attendanceForm.timeIn ? 'text-emerald-700' : 'text-gray-300'}`}>
+                                <span className={`text-xl font-black ${attendanceForm.timeIn ? 'text-emerald-700' : 'text-gray-300'} whitespace-nowrap`}>
                                     {attendanceForm.timeIn || '--:-- --'}
                                 </span>
                             </div>
                             <div className="flex flex-col p-4 bg-gray-50 border border-gray-100 rounded-2xl transition-all">
                                 <label className="text-[10px] font-bold text-rose-500 mb-1 uppercase tracking-wider">Time Out</label>
-                                <span className={`text-xl font-black ${attendanceForm.timeOut ? 'text-rose-600' : 'text-gray-300'}`}>
+                                <span className={`text-xl font-black ${attendanceForm.timeOut ? 'text-rose-600' : 'text-gray-300'} whitespace-nowrap`}>
                                     {attendanceForm.timeOut || '--:-- --'}
                                 </span>
                             </div>
@@ -203,8 +203,8 @@ const MyAttendance = () => {
                                 myAttendance.map((r: any, i: number) => (
                                     <tr key={i}>
                                         <td>{r.date}</td>
-                                        <td className="font-mono text-xs font-bold text-emerald-600">{r.timeIn}</td>
-                                        <td className="font-mono text-xs font-bold text-rose-500">{r.timeOut}</td>
+                                        <td className="font-mono text-xs font-bold text-emerald-600 whitespace-nowrap">{r.timeIn}</td>
+                                        <td className="font-mono text-xs font-bold text-rose-500 whitespace-nowrap">{r.timeOut}</td>
                                         <td><span className={`badge ${statusBadge[r.status]}`}><span className="badge-dot" />{r.status}</span></td>
                                         <td className="font-bold text-gray-700">{r.hours}h</td>
                                     </tr>
