@@ -7,8 +7,10 @@ import { useLeave } from '../../context/LeaveContext';
 const routeLabels: Record<string, string> = {
     '/dashboard': 'Dashboard',
     '/dashboard/personal-records': 'Employee Management',
-    '/dashboard/attendance': 'Time & Attendance',
+    '/dashboard/attendance': 'Attendance Log',
+    '/dashboard/my-attendance': 'Attendance Log',
     '/dashboard/leave': 'Leave Management',
+    '/dashboard/my-leave': 'My Leaves',
     '/dashboard/payroll': 'Payroll',
     '/dashboard/compliance': 'Government Compliance',
     '/dashboard/self-service': 'Employee Self-Service',
@@ -31,7 +33,7 @@ const TopBar = ({ onMenuClick }: TopBarProps) => {
     const [time, setTime] = useState(new Date());
     const location = useLocation();
     const { role } = useAuth();
-    
+
     const { notifications: leaveNotifications, markNotificationRead, clearNotifications } = useLeave();
     const [showNotifications, setShowNotifications] = useState(false);
     const [systemNotifications, setSystemNotifications] = useState([
@@ -40,7 +42,7 @@ const TopBar = ({ onMenuClick }: TopBarProps) => {
         { id: 3, title: 'System Update', message: 'System maintenance at 12:00 AM.', time: '5 hours ago', read: true, type: 'system', path: '/dashboard/settings' },
         { id: 4, title: 'Compliance Update', message: 'New Government Reporting requirements added.', time: '1 day ago', read: false, type: 'system', path: '/dashboard/compliance' },
     ]);
-    
+
     const navigate = useNavigate();
     const notifRef = useRef<HTMLDivElement>(null);
 
@@ -82,7 +84,7 @@ const TopBar = ({ onMenuClick }: TopBarProps) => {
 
     // FIXED: Dynamic path based on user role
     const leaveNotifsMapped = leaveNotifications.map(n => ({
-        id: n.id + 100000, 
+        id: n.id + 100000,
         title: n.type === 'success' ? 'Leave Approved' : n.type === 'danger' ? 'Leave Denied' : 'Leave Update',
         message: n.message,
         time: n.timestamp,
@@ -151,7 +153,7 @@ const TopBar = ({ onMenuClick }: TopBarProps) => {
         <header className="h-16 flex items-center justify-between px-4 sm:px-6 sticky top-0 z-40 bg-white/80 backdrop-blur-xl border-b border-gray-100">
             {/* Left: Mobile Menu Toggle + Breadcrumb */}
             <div className="flex items-center gap-2 sm:gap-3">
-                <button 
+                <button
                     onClick={onMenuClick}
                     className="lg:hidden p-1.5 -ml-1.5 hover:bg-gray-100 rounded-lg text-gray-600 transition-colors"
                 >

@@ -87,7 +87,14 @@ const EmployeeList = () => {
     };
 
 
-    const FormFields = ({ onSubmit, submitLabel }: { onSubmit: () => void; submitLabel: string }) => (
+    const statItems = [
+        { label: 'Total', value: employees.length, icon: Users, gradient: 'linear-gradient(135deg, #059669, #10b981)', badge: 'All' },
+        { label: 'Active', value: totalActive, icon: UserCheck, gradient: 'linear-gradient(135deg, #2563eb, #3b82f6)', badge: 'Active' },
+        { label: 'On Leave', value: totalOnLeave, icon: Users, gradient: 'linear-gradient(135deg, #d97706, #f59e0b)', badge: 'On Leave' },
+        { label: 'Inactive', value: totalInactive, icon: UserX, gradient: 'linear-gradient(135deg, #dc2626, #ef4444)', badge: 'Inactive' },
+    ];
+
+    const renderFormFields = (onSubmit: () => void, submitLabel: string) => (
         <div className="space-y-4">
             <div>
                 <label className="pro-label">Full Name</label>
@@ -139,13 +146,6 @@ const EmployeeList = () => {
             </div>
         </div>
     );
-
-    const statItems = [
-        { label: 'Total', value: employees.length, icon: Users, gradient: 'linear-gradient(135deg, #059669, #10b981)', badge: 'All' },
-        { label: 'Active', value: totalActive, icon: UserCheck, gradient: 'linear-gradient(135deg, #2563eb, #3b82f6)', badge: 'Active' },
-        { label: 'On Leave', value: totalOnLeave, icon: Users, gradient: 'linear-gradient(135deg, #d97706, #f59e0b)', badge: 'On Leave' },
-        { label: 'Inactive', value: totalInactive, icon: UserX, gradient: 'linear-gradient(135deg, #dc2626, #ef4444)', badge: 'Inactive' },
-    ];
 
     return (
         <div className="space-y-6">
@@ -264,7 +264,7 @@ const EmployeeList = () => {
                             <button onClick={() => setShowAddModal(false)} className="btn-ghost btn-icon"><X className="w-5 h-5 text-gray-400" /></button>
                         </div>
                         <div className="pro-modal-body">
-                            <FormFields onSubmit={handleAdd} submitLabel="Add Employee" />
+                            {renderFormFields(handleAdd, "Add Employee")}
                         </div>
                     </div>
                 </div>
@@ -279,7 +279,7 @@ const EmployeeList = () => {
                             <button onClick={() => setShowEditModal(false)} className="btn-ghost btn-icon"><X className="w-5 h-5 text-gray-400" /></button>
                         </div>
                         <div className="pro-modal-body">
-                            <FormFields onSubmit={handleEdit} submitLabel="Save Changes" />
+                            {renderFormFields(handleEdit, "Save Changes")}
                         </div>
                     </div>
                 </div>

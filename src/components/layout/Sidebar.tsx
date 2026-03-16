@@ -1,4 +1,4 @@
-import { useState } from 'react';
+
 import {
     Home, Users, Clock, FileText, DollarSign, Shield,
     Package, Settings, ChevronLeft, ChevronRight, LogOut,
@@ -11,10 +11,11 @@ import logo from '../../assets/logo.svg';
 interface SidebarProps {
     isMobileOpen?: boolean;
     onClose?: () => void;
+    collapsed?: boolean;
+    onToggleCollapse?: () => void;
 }
 
-const Sidebar = ({ isMobileOpen, onClose }: SidebarProps) => {
-    const [collapsed, setCollapsed] = useState(false);
+const Sidebar = ({ isMobileOpen, onClose, collapsed = false, onToggleCollapse }: SidebarProps) => {
     const { role, logout } = useAuth();
 
     const handleLogout = () => {
@@ -26,7 +27,7 @@ const Sidebar = ({ isMobileOpen, onClose }: SidebarProps) => {
 
     const hrNav = [
         { icon: Users, label: 'Employee Management', path: '/dashboard/personal-records' },
-        { icon: Clock, label: 'Time & Attendance', path: '/dashboard/attendance' },
+        { icon: Clock, label: 'Attendance Log', path: '/dashboard/attendance' },
         { icon: FileText, label: 'Leave Management', path: '/dashboard/leave' },
         { icon: DollarSign, label: 'Payroll', path: '/dashboard/payroll' },
         { icon: Shield, label: 'Government Compliance', path: '/dashboard/compliance' },
@@ -34,7 +35,7 @@ const Sidebar = ({ isMobileOpen, onClose }: SidebarProps) => {
 
     const userNav = [
         { icon: Newspaper, label: 'Company News', path: '/dashboard/company-news' },
-        { icon: Clock, label: 'My Attendance', path: '/dashboard/my-attendance' },
+        { icon: Clock, label: 'Attendance Log', path: '/dashboard/my-attendance' },
         { icon: FileText, label: 'My Leaves', path: '/dashboard/my-leave' },
         { icon: DollarSign, label: 'My Pay Slips', path: '/dashboard/my-payslips' },
         { icon: BarChart3, label: 'My Performance', path: '/dashboard/my-performance' },
@@ -82,7 +83,7 @@ const Sidebar = ({ isMobileOpen, onClose }: SidebarProps) => {
         <>
             {/* Mobile Overlay */}
             {isMobileOpen && (
-                <div 
+                <div
                     className="fixed inset-0 bg-black/50 z-40 lg:hidden backdrop-blur-sm"
                     onClick={onClose}
                 />
@@ -127,12 +128,12 @@ const Sidebar = ({ isMobileOpen, onClose }: SidebarProps) => {
 
                 <div className="border-t border-white/10 p-3 space-y-2">
                     <button
-                        onClick={() => setCollapsed(!collapsed)}
+                        onClick={onToggleCollapse}
                         className="hidden lg:flex w-full items-center justify-center gap-2 px-3 py-2 rounded-xl text-emerald-200/60 hover:bg-white/8 hover:text-white transition-all text-xs font-medium"
                     >
                         {collapsed ? <ChevronRight className="w-4 h-4" /> : <><ChevronLeft className="w-4 h-4" /><span>Collapse</span></>}
                     </button>
-                    
+
                     <button
                         onClick={handleLogout}
                         className={`w-full flex items-center gap-2 px-3 py-2.5 rounded-xl border border-rose-500/30 text-white hover:bg-rose-500/20 transition-all text-sm font-semibold ${collapsed ? 'justify-center px-0' : 'px-4'}`}
